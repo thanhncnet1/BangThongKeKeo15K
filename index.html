@@ -3,486 +3,518 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CMTD Pickleball Club - Quản Lý Giải Đấu & Thống Kê Kèo</title>
+    <title>BẢNG TỔNG HỢP KÈO 15K - Pickleball Manager</title>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- SheetJS for XLSX Export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        brand: {
-                            50: '#f0f7ff',
-                            100: '#e0effe',
-                            500: '#0284c7',
-                            600: '#0369a1',
-                            800: '#075985',
-                            900: '#0c4a6e',
-                            dark: '#0f172a',
-                            navy: '#0b132b',
-                            card: '#1e293b'
+                        navy: {
+                            800: '#0f172a',
+                            900: '#0b1329',
+                            950: '#060a17',
+                        },
+                        sheet: {
+                            header: '#1e293b',
+                            card: '#111827',
+                            border: '#334155',
+                            gold: '#fbbf24',
+                            emerald: '#10b981',
+                            rose: '#f43f5e'
                         }
                     }
                 }
             }
         }
     </script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- XLSX Export Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <style>
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #0b132b;
-            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            background-color: #060a17;
+            color: #f3f4f6;
         }
-        /* Custom Scrollbars */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+
+        /* Custom scrollbar for data tables */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
         }
-        ::-webkit-scrollbar-track {
+        .custom-scrollbar::-webkit-scrollbar-track {
             background: #0f172a;
         }
-        ::-webkit-scrollbar-thumb {
+        .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #334155;
             border-radius: 4px;
         }
-        ::-webkit-scrollbar-thumb:hover {
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #475569;
         }
-        .table-responsive-wrapper {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+
+        /* Compact inputs */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
     </style>
 </head>
-<body class="bg-brand-navy min-h-screen pb-12">
+<body class="min-h-screen bg-navy-950 text-gray-100 flex flex-col justify-between">
 
-    <!-- Top Banner Header -->
-    <header class="relative w-full overflow-hidden shadow-2xl border-b border-sky-900/50 bg-slate-900">
-        <div class="max-w-7xl mx-auto relative">
-            <img src="banner.jpg" alt="CMTD Pickleball Club Banner" class="w-full h-48 md:h-72 lg:h-80 object-cover object-center filter brightness-95 contrast-105" onerror="this.src='https://placehold.co/1200x400/0f172a/38bdf8?text=CMTD+PICKLEBALL+CLUB'">
-            <div class="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/30 to-transparent"></div>
-        </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 -mt-10 relative z-10">
-
-        <!-- Title & Main Control Bar Card -->
-        <div class="bg-slate-800/95 backdrop-blur-md rounded-2xl p-4 md:p-6 shadow-2xl border border-sky-800/40 mb-6">
-            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div>
+        <!-- Top Banner Header -->
+        <header class="w-full bg-gradient-to-r from-navy-900 via-navy-800 to-navy-900 border-b border-sheet-border shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
                 
-                <!-- Title & Logo -->
-                <div class="flex items-center gap-3 sm:gap-4">
-                    <img src="logo1.png" alt="CMTD Logo" class="w-14 h-14 sm:w-16 sm:h-16 object-contain drop-shadow-[0_4px_10px_rgba(56,189,248,0.4)]" onerror="this.src='https://placehold.co/100x100/0369a1/ffffff?text=CMTD'">
+                <!-- Logo & Title -->
+                <div class="flex items-center space-x-3 text-center md:text-left">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500 to-emerald-500 p-0.5 shadow-md flex-shrink-0">
+                        <div class="w-full h-full bg-navy-950 rounded-[10px] flex items-center justify-center">
+                            <i class="fa-solid fa-table-tennis-paddle-ball text-2xl text-amber-400"></i>
+                        </div>
+                    </div>
                     <div>
-                        <h1 class="text-xl sm:text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-sky-300 to-emerald-400 tracking-wide uppercase">
-                            BẢNG TỔNG HỢP KÈO 15K
+                        <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                            <span>BẢNG TỔNG HỢP KÈO 15K</span>
+                            <span class="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">PRO</span>
                         </h1>
-                        <p class="text-xs sm:text-sm text-sky-400 font-medium tracking-wider mt-0.5">
-                            <i class="fa-solid fa-trophy text-amber-400 mr-1.5"></i> CMTD PICKLEBALL CLUB - "GẶP LÀ VỤT"
-                        </p>
+                        <p class="text-xs text-gray-400">Hệ thống Quản lý Kèo & Giải đấu Pickleball Chuyên Nghiệp</p>
                     </div>
                 </div>
 
-                <!-- Control Buttons Bar -->
-                <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-                    <button onclick="openDaySummaryModal()" class="flex-1 sm:flex-none px-3.5 py-2 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-calendar-days"></i>
-                        <span>Thống Kê Ngày</span>
-                    </button>
+                <!-- Global Quick Settings & Role Switcher -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Role Switcher -->
+                    <div class="bg-navy-900 border border-sheet-border rounded-lg p-1 flex items-center text-xs">
+                        <button id="role-viewer" onclick="setRole('viewer')" class="px-3 py-1.5 rounded-md font-medium transition-all">
+                            <i class="fa-solid fa-eye mr-1"></i> Xem
+                        </button>
+                        <button id="role-admin" onclick="setRole('admin')" class="px-3 py-1.5 rounded-md font-medium transition-all">
+                            <i class="fa-solid fa-user-shield mr-1"></i> Admin
+                        </button>
+                    </div>
 
-                    <button onclick="openSettingsModal()" class="flex-1 sm:flex-none px-3.5 py-2 text-xs sm:text-sm font-semibold text-white bg-slate-700 hover:bg-slate-600 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-gear text-sky-400"></i>
-                        <span>Cấu Hình Kèo</span>
-                    </button>
-
-                    <button onclick="exportToExcel()" class="flex-1 sm:flex-none px-3.5 py-2 text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-file-excel"></i>
+                    <!-- Export Excel Button -->
+                    <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow transition-all">
+                        <i class="fa-solid fa-file-excel text-sm"></i>
                         <span>Xuất Excel</span>
                     </button>
 
-                    <button id="adminToggleBtn" onclick="toggleAdminMode()" class="px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-300 bg-slate-900/80 hover:bg-slate-900 rounded-xl border border-slate-700 transition-all flex items-center gap-2">
-                        <i id="adminLockIcon" class="fa-solid fa-lock text-amber-500"></i>
-                        <span id="adminText">Quyền BTC: Tắt</span>
+                    <!-- Manage VDV Button -->
+                    <button onclick="toggleVDVModal(true)" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow transition-all">
+                        <i class="fa-solid fa-users text-sm"></i>
+                        <span>Quản lý VĐV</span>
                     </button>
                 </div>
             </div>
+        </header>
 
-            <!-- Date Selector Toolbar -->
-            <div class="mt-5 pt-4 border-t border-slate-700/60 flex flex-wrap items-center justify-between gap-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs sm:text-sm text-slate-300 font-medium">Ngày đấu:</span>
-                    <select id="dateSelect" onchange="changeActiveDate(this.value)" class="bg-slate-900 border border-sky-700/50 text-sky-300 text-sm font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-500">
-                        <!-- Dates populated via JS -->
-                    </select>
-                </div>
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-                <div class="flex items-center gap-2">
-                    <button onclick="addNewDayPrompt()" class="px-3 py-1.5 text-xs font-semibold bg-sky-600/30 text-sky-300 border border-sky-500/40 hover:bg-sky-600 hover:text-white rounded-lg transition-all flex items-center gap-1.5">
-                        <i class="fa-solid fa-plus"></i> Thêm Ngày
-                    </button>
-                    <button onclick="editDayPrompt()" class="px-3 py-1.5 text-xs font-semibold bg-amber-600/30 text-amber-300 border border-amber-500/40 hover:bg-amber-600 hover:text-white rounded-lg transition-all flex items-center gap-1.5">
-                        <i class="fa-solid fa-pen-to-square"></i> Đổi Tên
-                    </button>
-                    <button onclick="deleteCurrentDay()" class="px-3 py-1.5 text-xs font-semibold bg-rose-600/30 text-rose-300 border border-rose-500/40 hover:bg-rose-600 hover:text-white rounded-lg transition-all flex items-center gap-1.5">
-                        <i class="fa-solid fa-trash-can"></i> Xóa Ngày
-                    </button>
-                </div>
-            </div>
-        </div>
+            <!-- Date Selection & Global Rules Bar -->
+            <section class="bg-sheet-card rounded-xl border border-sheet-border p-4 shadow-md space-y-4">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    
+                    <!-- Date Badges -->
+                    <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1 lg:pb-0">
+                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1 mr-1">
+                            <i class="fa-regular fa-calendar-days text-amber-400"></i> Ngày:
+                        </span>
+                        <div id="date-badges-container" class="flex items-center gap-2">
+                            <!-- Dynamic Date Badges -->
+                        </div>
+                    </div>
 
-        <section class="bg-slate-800/90 backdrop-blur rounded-2xl shadow-2xl border border-sky-900/40 p-3 sm:p-5 mb-8">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-700/80 gap-3">
-                <div>
-                    <h2 class="text-lg sm:text-xl font-bold text-sky-300 flex items-center gap-2">
-                        <i class="fa-solid fa-table-list text-yellow-400"></i>
-                        DANH SÁCH CÁC TRẬN ĐẤU
-                    </h2>
-                    <p class="text-xs text-slate-400 mt-0.5">Quản lý và ghi nhận kết quả điểm số từng trận</p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="addNewMatch()" class="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-plus-circle"></i> Thêm Trận Mới
-                    </button>
-                </div>
-            </div>
-
-            <!-- Matches Table Responsive Wrapper -->
-            <div class="table-responsive-wrapper rounded-xl border border-slate-700/60 bg-slate-900/60">
-                <table class="w-full text-left text-xs sm:text-sm border-collapse min-w-[700px]">
-                    <thead>
-                        <tr class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-slate-300 font-semibold border-b border-slate-700">
-                            <th class="p-3 text-center w-12">STT</th>
-                            <th class="p-3 w-1/3 text-emerald-400">ĐỘI 1 (Thắng)</th>
-                            <th class="p-3 text-center w-28">TỶ SỐ</th>
-                            <th class="p-3 w-1/3 text-rose-400">ĐỘI 2 (Thua)</th>
-                            <th class="p-3 text-center w-24">LOẠI KÈO</th>
-                            <th class="p-3 text-center w-16">THAO TÁC</th>
-                        </tr>
-                    </thead>
-                    <tbody id="matchListBody" class="divide-y divide-slate-800/80 text-slate-200">
-                        <!-- Populated dynamically -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <section class="bg-slate-800/90 backdrop-blur rounded-2xl shadow-2xl border border-sky-900/40 p-3 sm:p-5">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-700/80 gap-3">
-                <div>
-                    <h2 class="text-lg sm:text-xl font-bold text-emerald-400 flex items-center gap-2">
-                        <i class="fa-solid fa-calculator text-emerald-400"></i>
-                        THỐNG KÊ THÀNH TIỀN & TRẠNG THÁI NỘP
-                    </h2>
-                    <p class="text-xs text-slate-400 mt-0.5">Tổng hợp kết quả thắng thua, tiền thưởng/phạt và xác nhận nộp quỹ</p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="addNewPlayerPrompt()" class="px-3 py-1.5 text-xs font-semibold bg-sky-600/30 text-sky-300 border border-sky-500/40 hover:bg-sky-600 hover:text-white rounded-lg transition-all flex items-center gap-1.5">
-                        <i class="fa-solid fa-user-plus"></i> Thêm VĐV
-                    </button>
-                </div>
-            </div>
-
-            <!-- Player Table Responsive Wrapper -->
-            <div class="table-responsive-wrapper rounded-xl border border-slate-700/60 bg-slate-900/60">
-                <table class="w-full text-left text-xs sm:text-sm border-collapse min-w-[650px]">
-                    <thead>
-                        <tr class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-slate-300 font-semibold border-b border-slate-700">
-                            <th class="p-3 text-center w-12">STT</th>
-                            <th class="p-3">TÊN VẬN ĐỘNG VIÊN</th>
-                            <th class="p-3 text-center w-20">TRẬN</th>
-                            <th class="p-3 text-center w-20 text-emerald-400">THẮNG</th>
-                            <th class="p-3 text-center w-20 text-rose-400">THUA</th>
-                            <th class="p-3 text-right w-32">THÀNH TIỀN</th>
-                            <th class="p-3 text-center w-28">ĐÃ NỘP</th>
-                            <th class="p-3 text-center w-16">XÓA</th>
-                        </tr>
-                    </thead>
-                    <tbody id="playerSummaryBody" class="divide-y divide-slate-800/80 text-slate-200">
-                        <!-- Populated dynamically -->
-                    </tbody>
-                    <tfoot id="playerSummaryFoot" class="bg-slate-900/90 font-bold border-t-2 border-slate-700 text-slate-200">
-                        <!-- Populated dynamically -->
-                    </tfoot>
-                </table>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Day Summary Modal -->
-    <div id="daySummaryModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-2 sm:p-4">
-        <div class="bg-slate-800 border border-sky-800 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl">
-            <div class="p-4 sm:p-5 border-b border-slate-700 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-chart-column text-2xl text-sky-400"></i>
-                    <div>
-                        <h3 class="text-lg font-bold text-white">BẢNG TỔNG HỢP CÁC NGÀY ĐẤU</h3>
-                        <p class="text-xs text-slate-400">Thống kê kết quả tiền thưởng/phạt theo từng ngày của các VĐV</p>
+                    <!-- Date Action Buttons -->
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="addNewDate()" class="bg-navy-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition-all">
+                            <i class="fa-solid fa-plus"></i> Thêm ngày
+                        </button>
+                        <button onclick="editCurrentDate()" class="bg-navy-800 hover:bg-slate-700 text-gray-300 border border-sheet-border text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition-all">
+                            <i class="fa-solid fa-pen"></i> Sửa ngày
+                        </button>
+                        <button onclick="deleteCurrentDate()" class="bg-navy-800 hover:bg-rose-950/40 text-rose-400 border border-rose-500/30 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition-all">
+                            <i class="fa-solid fa-trash"></i> Xóa ngày
+                        </button>
+                        <button onclick="toggleSummaryMatrixModal(true)" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-chart-line"></i> Bảng tổng hợp các ngày
+                        </button>
                     </div>
                 </div>
-                <button onclick="closeDaySummaryModal()" class="text-slate-400 hover:text-white p-2 text-xl">
-                    <i class="fa-solid fa-xmark"></i>
+
+                <!-- Match Rules Quick Config Bar -->
+                <div class="pt-3 border-t border-sheet-border/60 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 text-xs">
+                    <div class="bg-navy-900/80 p-2.5 rounded-lg border border-sheet-border flex items-center justify-between">
+                        <span class="text-gray-400">Thua chuẩn:</span>
+                        <span class="font-bold text-rose-400" id="cfg-loss-stake">-15K</span>
+                    </div>
+                    <div class="bg-navy-900/80 p-2.5 rounded-lg border border-sheet-border flex items-center justify-between">
+                        <span class="text-gray-400">Thắng chuẩn:</span>
+                        <span class="font-bold text-emerald-400" id="cfg-win-stake">+5K</span>
+                    </div>
+                    <div class="bg-navy-900/80 p-2.5 rounded-lg border border-sheet-border flex items-center justify-between">
+                        <span class="text-gray-400">Thua HẦM (dưới 0):</span>
+                        <span class="font-bold text-rose-500" id="cfg-ham-loss">-30K</span>
+                    </div>
+                    <div class="bg-navy-900/80 p-2.5 rounded-lg border border-sheet-border flex items-center justify-between">
+                        <span class="text-gray-400">Tối thiểu trận:</span>
+                        <div class="flex items-center gap-1">
+                            <input type="number" id="cfg-min-matches" value="4" onchange="updateGlobalSettings()" class="w-10 bg-navy-950 border border-slate-700 rounded text-center text-amber-400 font-bold focus:outline-none focus:border-amber-500">
+                            <span class="text-gray-400">trận</span>
+                        </div>
+                    </div>
+                    <div class="bg-navy-900/80 p-2.5 rounded-lg border border-sheet-border flex items-center justify-between col-span-2 sm:col-span-1">
+                        <span class="text-gray-400">Tiền BTC:</span>
+                        <div class="flex items-center gap-1">
+                            <input type="number" id="cfg-btc-fee" value="-10" onchange="updateGlobalSettings()" class="w-14 bg-navy-950 border border-slate-700 rounded text-center text-rose-400 font-bold focus:outline-none focus:border-amber-500">
+                            <span class="text-gray-400">K</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-sheet-card rounded-xl border border-sheet-border shadow-xl overflow-hidden">
+                <!-- Section Header -->
+                <div class="p-4 bg-navy-900 border-b border-sheet-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2.5 h-6 bg-amber-500 rounded-full"></div>
+                        <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                            BẢNG DANH SÁCH TRẬN ĐẤU
+                            <span id="match-count-badge" class="text-xs bg-slate-800 text-amber-400 font-medium px-2 py-0.5 rounded-full border border-slate-700">0 trận</span>
+                        </h2>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="addNewMatch()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-3 py-2 rounded-lg flex items-center gap-1.5 shadow transition-all">
+                            <i class="fa-solid fa-plus-circle"></i>
+                            <span>Thêm trận đấu</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Match Table Container -->
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                        <thead>
+                            <tr class="bg-sheet-header text-gray-300 font-semibold border-b border-sheet-border uppercase text-[11px] tracking-wider">
+                                <th class="p-3 w-12 text-center">STT</th>
+                                <th class="p-3 min-w-[160px]">Đội thắng (VĐV 1 & 2)</th>
+                                <th class="p-3 min-w-[160px]">Đội thua (VĐV 1 & 2)</th>
+                                <th class="p-3 w-28 text-center">Tỷ số (Thắng - Thua)</th>
+                                <th class="p-3 w-36 text-center">Mức Kèo</th>
+                                <th class="p-3 w-24 text-center">Trạng thái</th>
+                                <th class="p-3 w-16 text-center">Xóa</th>
+                            </tr>
+                        </thead>
+                        <tbody id="match-table-body" class="divide-y divide-sheet-border/50 text-gray-200">
+                            <!-- Dynamic Matches Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="bg-sheet-card rounded-xl border border-sheet-border shadow-xl overflow-hidden">
+                <!-- Section Header -->
+                <div class="p-4 bg-navy-900 border-b border-sheet-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2.5 h-6 bg-emerald-500 rounded-full"></div>
+                        <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                            BẢNG THỐNG KÊ THÀNH TIỀN THỰC TẾ
+                            <span class="text-xs bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded">Tự động tính toán</span>
+                        </h2>
+                    </div>
+                </div>
+
+                <!-- Financial Table Container -->
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                        <thead>
+                            <tr class="bg-sheet-header text-gray-300 font-semibold border-b border-sheet-border uppercase text-[11px] tracking-wider">
+                                <th class="p-3 w-12 text-center">STT</th>
+                                <th class="p-3 min-w-[150px]">Tên Vận Động Viên</th>
+                                <th class="p-3 w-20 text-center">Số Trận</th>
+                                <th class="p-3 w-20 text-center">Thắng</th>
+                                <th class="p-3 w-20 text-center">Thua</th>
+                                <th class="p-3 w-28 text-right">Tổng Kèo (K)</th>
+                                <th class="p-3 w-28 text-right">Tiền BTC (K)</th>
+                                <th class="p-3 w-32 text-right">Thành Tiền (K)</th>
+                                <th class="p-3 w-28 text-center">Thực Tế</th>
+                                <th class="p-3 min-w-[160px]">Ghi chú thanh toán</th>
+                            </tr>
+                        </thead>
+                        <tbody id="finance-table-body" class="divide-y divide-sheet-border/50 text-gray-200">
+                            <!-- Dynamic Financial Calculations -->
+                        </tbody>
+                        <tfoot id="finance-table-foot" class="bg-navy-900/90 font-bold border-t-2 border-sheet-border">
+                            <!-- Dynamic Foot Totals -->
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+
+    <!-- VDV Management Modal -->
+    <div id="vdv-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-sheet-card border border-sheet-border rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 bg-navy-900 border-b border-sheet-border flex items-center justify-between">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-users text-indigo-400"></i> Quản Lý Danh Sách VĐV
+                </h3>
+                <button onclick="toggleVDVModal(false)" class="text-gray-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
             
-            <div class="p-4 overflow-y-auto flex-1">
-                <div class="table-responsive-wrapper rounded-xl border border-slate-700 bg-slate-900/80">
-                    <table class="w-full text-xs sm:text-sm text-left border-collapse min-w-[600px]">
-                        <thead id="daySummaryHeader" class="bg-slate-900 text-slate-300 font-semibold border-b border-slate-700">
-                            <!-- Populated dynamically -->
+            <div class="p-4 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+                <!-- Add New VDV Input -->
+                <div class="flex gap-2">
+                    <input type="text" id="new-vdv-name" placeholder="Nhập tên VĐV mới..." class="flex-1 bg-navy-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <button onclick="addVDV()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all">
+                        <i class="fa-solid fa-plus mr-1"></i> Thêm
+                    </button>
+                </div>
+
+                <!-- VDV List Table -->
+                <div class="border border-sheet-border rounded-lg overflow-hidden">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-navy-900 text-gray-400 border-b border-sheet-border uppercase">
+                            <tr>
+                                <th class="p-2.5 w-12 text-center">STT</th>
+                                <th class="p-2.5">Họ và Tên VĐV</th>
+                                <th class="p-2.5 w-24 text-center">Thao tác</th>
+                            </tr>
                         </thead>
-                        <tbody id="daySummaryBody" class="divide-y divide-slate-800 text-slate-200">
-                            <!-- Populated dynamically -->
+                        <tbody id="vdv-list-body" class="divide-y divide-sheet-border/50">
+                            <!-- Dynamic VDV Items -->
                         </tbody>
-                        <tfoot id="daySummaryFoot" class="bg-slate-900/90 font-bold border-t-2 border-slate-700 text-slate-100">
-                            <!-- Populated dynamically -->
-                        </tfoot>
                     </table>
                 </div>
             </div>
 
-            <div class="p-4 border-t border-slate-700 flex justify-end">
-                <button onclick="closeDaySummaryModal()" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium text-sm">
-                    Đóng
-                </button>
+            <div class="p-3 bg-navy-900 border-t border-sheet-border text-right">
+                <button onclick="toggleVDVModal(false)" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium px-4 py-2 rounded-lg">Đóng</button>
             </div>
         </div>
     </div>
 
-    <!-- Match Settings Modal -->
-    <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-3">
-        <div class="bg-slate-800 border border-sky-800 rounded-2xl w-full max-w-md p-5 shadow-2xl">
-            <div class="flex justify-between items-center pb-3 border-b border-slate-700 mb-4">
-                <h3 class="text-lg font-bold text-sky-300 flex items-center gap-2">
-                    <i class="fa-solid fa-sliders text-amber-400"></i> Cấu Hình Kèo Mặc Định
+    <!-- Multi-day Summary Matrix Modal -->
+    <div id="summary-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-sheet-card border border-sheet-border rounded-xl w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 bg-navy-900 border-b border-sheet-border flex items-center justify-between">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-amber-400"></i> BẢNG TỔNG HỢP CÁC NGÀY (CÁC VÒNG KÈO)
                 </h3>
-                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white text-xl">
-                    <i class="fa-solid fa-xmark"></i>
+                <button onclick="toggleSummaryMatrixModal(false)" class="text-gray-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Chế Độ Kèo Cho Ngày Hiện Tại:</label>
-                    <select id="presetRuleSelect" onchange="handlePresetChange(this.value)" class="w-full bg-slate-900 border border-slate-700 text-sky-300 rounded-xl p-2.5 text-sm">
-                        <option value="15k">Kèo Chuẩn 15k (+5k / -15k, Hầm x2)</option>
-                        <option value="25k">Kèo 0k / -25k (Thắng 0k / Thua -25k)</option>
-                        <option value="custom">Kèo Tự Do (Tuỳ chỉnh riêng)</option>
-                    </select>
-                </div>
+            <div class="p-4 overflow-x-auto custom-scrollbar flex-1">
+                <table class="w-full text-xs border-collapse">
+                    <thead id="summary-matrix-head">
+                        <!-- Dynamic Header Columns for Dates -->
+                    </thead>
+                    <tbody id="summary-matrix-body" class="divide-y divide-sheet-border/50 text-gray-200">
+                        <!-- Dynamic Player Summary Rows -->
+                    </tbody>
+                </table>
+            </div>
 
-                <div id="customStakeInputs" class="grid grid-cols-2 gap-3 p-3 bg-slate-900/50 rounded-xl border border-slate-700/60 hidden">
-                    <div>
-                        <label class="block text-xs text-emerald-400 font-semibold mb-1">Thắng Thường (VNĐ):</label>
-                        <input type="number" id="customWinStake" class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg p-2 text-sm" value="5000">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-rose-400 font-semibold mb-1">Thua Thường (VNĐ):</label>
-                        <input type="number" id="customLoseStake" class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg p-2 text-sm" value="15000">
-                    </div>
-                </div>
-
-                <div class="bg-slate-900/40 p-3 rounded-xl border border-amber-500/20 text-xs text-amber-300/90 leading-relaxed">
-                    <i class="fa-solid fa-circle-info mr-1"></i>
-                    <strong>Quy tắc "HẦM" (Thua 0 điểm):</strong> Trận đấu kết thúc với đội thua 0 điểm sẽ được đánh dấu chữ <strong>HẦM</strong> và tự động nhân 2 tiền thưởng/phạt.
-                </div>
-
-                <div class="flex justify-end gap-2 pt-2">
-                    <button onclick="closeSettingsModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl text-xs font-semibold">Hủy</button>
-                    <button onclick="saveMatchSettings()" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-md">Lưu Cấu Hình</button>
-                </div>
+            <div class="p-3 bg-navy-900 border-t border-sheet-border text-right">
+                <button onclick="toggleSummaryMatrixModal(false)" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium px-4 py-2 rounded-lg">Đóng</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Storage Key
-        const STORAGE_KEY = 'CMTD_PICKLEBALL_APP_DATA_V2';
-
-        // Initial Sample Data Structure
-        const DEFAULT_DATA = {
-            players: ["Duy Anh", "Hoàng Hải", "Tuấn Minh", "Hải Đăng", "Quang Huy", "Văn Nam"],
-            activeDate: "2026-09-29",
-            days: {
-                "2026-09-29": {
-                    ruleType: "15k",
-                    customWin: 5000,
-                    customLose: 15000,
+        // State Management
+        let appState = {
+            role: 'admin', // 'admin' or 'viewer'
+            activeDateId: null,
+            settings: {
+                minMatchesRequired: 4,
+                btcFeeAmount: -10,
+                defaultWin: 5,
+                defaultLoss: -15
+            },
+            players: [
+                "Nguyễn Văn A", "Trần Văn B", "Lê Văn C", "Phạm Văn D", 
+                "Hoàng Văn E", "Vũ Văn F", "Đặng Văn G", "Bùi Văn H"
+            ],
+            dates: [
+                {
+                    id: 'date-1',
+                    dateStr: '29/09/2026',
                     matches: [
-                        { id: "m1", p1_1: "Duy Anh", p1_2: "Hoàng Hải", s1: 11, s2: 8, p2_1: "Tuấn Minh", p2_2: "Hải Đăng", customRule: "default" },
-                        { id: "m2", p1_1: "Quang Huy", p1_2: "Văn Nam", s1: 11, s2: 0, p2_1: "Duy Anh", p2_2: "Tuấn Minh", customRule: "default" }
+                        { id: 'm1', w1: 'Nguyễn Văn A', w2: 'Trần Văn B', l1: 'Lê Văn C', l2: 'Phạm Văn D', scoreW: 11, scoreL: 4, customStakeWin: null, customStakeLoss: null, isPreset25: false },
+                        { id: 'm2', w1: 'Hoàng Văn E', w2: 'Vũ Văn F', l1: 'Đặng Văn G', l2: 'Bùi Văn H', scoreW: 11, scoreL: 0, customStakeWin: null, customStakeLoss: null, isPreset25: false }, // HẦM Match
+                        { id: 'm3', w1: 'Nguyễn Văn A', w2: 'Lê Văn C', l1: 'Trần Văn B', l2: 'Phạm Văn D', scoreW: 11, scoreL: 7, customStakeWin: null, customStakeLoss: null, isPreset25: false }
                     ],
-                    payments: {}
+                    payments: {} // playerId -> { isPaid: boolean, note: string }
                 }
-            }
+            ]
         };
 
-        let appData = null;
-        let isAdmin = false;
-
-        // Load or Init App
-        function loadAppData() {
-            try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                if (raw) {
-                    appData = JSON.parse(raw);
-                } else {
-                    appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
-                    saveAppData();
-                }
-            } catch (e) {
-                console.error("Storage error:", e);
-                appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        // Initialize App
+        window.onload = function() {
+            if (appState.dates.length > 0) {
+                appState.activeDateId = appState.dates[0].id;
             }
-        }
+            renderAll();
+        };
 
-        function saveAppData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-        }
-
-        function formatMoney(amount) {
-            if (amount === 0) return '0k';
-            const kVal = amount / 1000;
-            return (amount > 0 ? `+${kVal}k` : `${kVal}k`);
-        }
-
-        function calculateMatchStake(match, dayRule) {
-            const score1 = parseInt(match.s1) || 0;
-            const score2 = parseInt(match.s2) || 0;
-            const isHam = (score2 === 0);
-
-            let winAmt = 5000;
-            let loseAmt = 15000;
-
-            const rule = match.customRule && match.customRule !== 'default' ? match.customRule : dayRule.ruleType;
-
-            if (rule === '25k') {
-                winAmt = 0;
-                loseAmt = 25000;
-            } else if (rule === 'custom') {
-                winAmt = dayRule.customWin || 5000;
-                loseAmt = dayRule.customLose || 15000;
-            }
-
-            if (isHam) {
-                winAmt *= 2;
-                loseAmt *= 2;
-            }
-
-            return { winAmt, loseAmt, isHam };
-        }
-
-        // Calculate stats for a specific day
-        function computeDayStats(dateStr) {
-            const dayData = appData.days[dateStr];
-            if (!dayData) return { playerStats: {}, totalMoney: 0 };
-
-            const playerStats = {};
-            appData.players.forEach(p => {
-                playerStats[p] = { played: 0, wins: 0, losses: 0, balance: 0, paid: !!dayData.payments[p] };
-            });
-
-            (dayData.matches || []).forEach(match => {
-                const { winAmt, loseAmt } = calculateMatchStake(match, dayData);
-
-                // Team 1 (Winners)
-                [match.p1_1, match.p1_2].forEach(p => {
-                    if (p && playerStats[p]) {
-                        playerStats[p].played++;
-                        playerStats[p].wins++;
-                        playerStats[p].balance += winAmt;
-                    }
-                });
-
-                // Team 2 (Losers)
-                [match.p2_1, match.p2_2].forEach(p => {
-                    if (p && playerStats[p]) {
-                        playerStats[p].played++;
-                        playerStats[p].losses++;
-                        playerStats[p].balance -= loseAmt;
-                    }
-                });
-            });
-
-            return { playerStats, dayData };
-        }
-
-        function renderUI() {
-            renderDateSelect();
-            renderMatches();
-            renderPlayerSummary();
-        }
-
-        function renderDateSelect() {
-            const select = document.getElementById('dateSelect');
-            select.innerHTML = '';
-            const dates = Object.keys(appData.days).sort().reverse();
+        function setRole(role) {
+            appState.role = role;
+            document.getElementById('role-admin').className = role === 'admin' 
+                ? 'px-3 py-1.5 rounded-md font-medium transition-all bg-amber-500 text-slate-950 font-bold shadow' 
+                : 'px-3 py-1.5 rounded-md font-medium transition-all text-gray-400 hover:text-white';
+            document.getElementById('role-viewer').className = role === 'viewer' 
+                ? 'px-3 py-1.5 rounded-md font-medium transition-all bg-amber-500 text-slate-950 font-bold shadow' 
+                : 'px-3 py-1.5 rounded-md font-medium transition-all text-gray-400 hover:text-white';
             
-            dates.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d;
-                opt.textContent = d === appData.activeDate ? `${d} (Hiện tại)` : d;
-                if (d === appData.activeDate) opt.selected = true;
-                select.appendChild(opt);
-            });
+            renderAll();
         }
 
-        function renderMatches() {
-            const currentDay = appData.days[appData.activeDate];
-            const tbody = document.getElementById('matchListBody');
+        function getActiveDateObj() {
+            return appState.dates.find(d => d.id === appState.activeDateId) || null;
+        }
+
+        function setActiveDate(dateId) {
+            appState.activeDateId = dateId;
+            renderAll();
+        }
+
+        function addNewDate() {
+            if (appState.role !== 'admin') return alert('Chỉ Admin mới có quyền thêm ngày!');
+            const dateStr = prompt("Nhập ngày thi đấu mới (VD: 30/09/2026):", new Date().toLocaleDateString('vi-VN'));
+            if (!dateStr) return;
+
+            const newId = 'date-' + Date.now();
+            appState.dates.push({
+                id: newId,
+                dateStr: dateStr,
+                matches: [],
+                payments: {}
+            });
+            appState.activeDateId = newId;
+            renderAll();
+        }
+
+        function editCurrentDate() {
+            if (appState.role !== 'admin') return alert('Chỉ Admin mới có quyền sửa ngày!');
+            const activeDate = getActiveDateObj();
+            if (!activeDate) return;
+
+            const newStr = prompt("Sửa tên ngày thi đấu:", activeDate.dateStr);
+            if (newStr) {
+                activeDate.dateStr = newStr;
+                renderAll();
+            }
+        }
+
+        function deleteCurrentDate() {
+            if (appState.role !== 'admin') return alert('Chỉ Admin mới có quyền xóa ngày!');
+            if (appState.dates.length <= 1) {
+                alert('Không thể xóa ngày cuối cùng!');
+                return;
+            }
+            if (confirm("Bạn có chắc chắn muốn xóa ngày thi đấu này?")) {
+                appState.dates = appState.dates.filter(d => d.id !== appState.activeDateId);
+                appState.activeDateId = appState.dates[0].id;
+                renderAll();
+            }
+        }
+
+        function updateGlobalSettings() {
+            const minMatches = parseInt(document.getElementById('cfg-min-matches').value) || 0;
+            const btcFee = parseInt(document.getElementById('cfg-btc-fee').value) || 0;
+            appState.settings.minMatchesRequired = minMatches;
+            appState.settings.btcFeeAmount = btcFee;
+            renderFinanceTable();
+        }
+
+        function renderMatchesTable() {
+            const tbody = document.getElementById('match-table-body');
+            const activeDate = getActiveDateObj();
             tbody.innerHTML = '';
 
-            if (!currentDay || !currentDay.matches || currentDay.matches.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400 font-medium">Chưa có trận đấu nào trong ngày này. Nhấn "Thêm Trận Mới" để bắt đầu!</td></tr>`;
+            if (!activeDate || activeDate.matches.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-500 italic">Chưa có trận đấu nào được ghi nhận cho ngày này. Bấm "Thêm trận đấu" để bắt đầu.</td></tr>`;
+                document.getElementById('match-count-badge').innerText = '0 trận';
                 return;
             }
 
-            currentDay.matches.forEach((m, idx) => {
-                const { isHam } = calculateMatchStake(m, currentDay);
+            document.getElementById('match-count-badge').innerText = `${activeDate.matches.length} trận`;
+
+            activeDate.matches.forEach((m, idx) => {
+                const isHam = parseInt(m.scoreL) === 0 && parseInt(m.scoreW) > 0;
+                
+                // Stake calculation logic
+                let winStake = m.customStakeWin !== null ? m.customStakeWin : (isHam ? 10 : 5);
+                let lossStake = m.customStakeLoss !== null ? m.customStakeLoss : (isHam ? -30 : -15);
+                if (m.isPreset25) {
+                    winStake = 0;
+                    lossStake = -25;
+                }
+
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-800/50 transition-colors";
-
-                const playerOptions = (selected) => {
-                    return `<option value="">-- Chọn --</option>` + appData.players.map(p => 
-                        `<option value="${p}" ${p === selected ? 'selected' : ''}>${p}</option>`
-                    ).join('');
-                };
-
+                tr.className = "hover:bg-navy-900/60 transition-colors border-b border-sheet-border/40";
+                
                 tr.innerHTML = `
-                    <td class="p-2.5 text-center font-bold text-slate-400">${idx + 1}</td>
-                    <td class="p-2.5">
-                        <div class="flex flex-col sm:flex-row gap-1.5">
-                            <select onchange="updateMatch('${m.id}', 'p1_1', this.value)" class="bg-slate-900 border border-slate-700 text-emerald-300 rounded-lg p-1.5 w-full text-xs">${playerOptions(m.p1_1)}</select>
-                            <select onchange="updateMatch('${m.id}', 'p1_2', this.value)" class="bg-slate-900 border border-slate-700 text-emerald-300 rounded-lg p-1.5 w-full text-xs">${playerOptions(m.p1_2)}</select>
+                    <td class="p-3 text-center font-bold text-amber-400">${idx + 1}</td>
+                    <td class="p-3">
+                        <div class="space-y-1">
+                            ${renderPlayerSelect(m.id, 'w1', m.w1)}
+                            ${renderPlayerSelect(m.id, 'w2', m.w2)}
                         </div>
                     </td>
-                    <td class="p-2.5 text-center">
+                    <td class="p-3">
+                        <div class="space-y-1">
+                            ${renderPlayerSelect(m.id, 'l1', m.l1)}
+                            ${renderPlayerSelect(m.id, 'l2', m.l2)}
+                        </div>
+                    </td>
+                    <td class="p-3 text-center">
                         <div class="flex items-center justify-center gap-1">
-                            <input type="number" value="${m.s1}" onchange="updateMatch('${m.id}', 's1', parseInt(this.value)||0)" class="w-10 bg-slate-900 border border-slate-700 text-center font-bold text-emerald-400 rounded-md p-1 text-xs">
-                            <span class="text-slate-500 font-bold">-</span>
-                            <input type="number" value="${m.s2}" onchange="updateMatch('${m.id}', 's2', parseInt(this.value)||0)" class="w-10 bg-slate-900 border border-slate-700 text-center font-bold text-rose-400 rounded-md p-1 text-xs">
+                            <input type="number" min="0" value="${m.scoreW}" onchange="updateMatchScore('${m.id}', 'w', this.value)" class="w-10 bg-navy-950 border border-emerald-500/50 rounded text-center font-bold text-emerald-400 py-1 focus:outline-none focus:border-emerald-400">
+                            <span class="text-gray-500 font-bold">-</span>
+                            <input type="number" min="0" value="${m.scoreL}" onchange="updateMatchScore('${m.id}', 'l', this.value)" class="w-10 bg-navy-950 border border-rose-500/50 rounded text-center font-bold text-rose-400 py-1 focus:outline-none focus:border-rose-400">
                         </div>
-                        ${isHam ? `<span class="inline-block mt-1 px-1.5 py-0.5 bg-red-600 text-white font-extrabold text-[10px] rounded tracking-wider shadow">HẦM (x2)</span>` : ''}
+                        ${isHam ? '<span class="inline-block mt-1 text-[10px] bg-rose-950 text-rose-400 font-black px-1.5 py-0.5 rounded border border-rose-500/50 uppercase tracking-wider animate-pulse">HẦM (x2)</span>' : ''}
                     </td>
-                    <td class="p-2.5">
-                        <div class="flex flex-col sm:flex-row gap-1.5">
-                            <select onchange="updateMatch('${m.id}', 'p2_1', this.value)" class="bg-slate-900 border border-slate-700 text-rose-300 rounded-lg p-1.5 w-full text-xs">${playerOptions(m.p2_1)}</select>
-                            <select onchange="updateMatch('${m.id}', 'p2_2', this.value)" class="bg-slate-900 border border-slate-700 text-rose-300 rounded-lg p-1.5 w-full text-xs">${playerOptions(m.p2_2)}</select>
+                    <td class="p-3 text-center">
+                        <div class="flex flex-col items-center gap-1">
+                            <div class="flex items-center gap-1 text-xs">
+                                <span class="text-emerald-400 font-bold">+${winStake}K</span>
+                                <span class="text-gray-500">/</span>
+                                <span class="text-rose-400 font-bold">${lossStake}K</span>
+                            </div>
+                            <button onclick="toggleMatchPreset25('${m.id}')" class="text-[10px] px-2 py-0.5 rounded border ${m.isPreset25 ? 'bg-amber-500 text-slate-950 font-bold border-amber-400' : 'bg-navy-950 text-gray-400 border-slate-700 hover:text-white'} transition-all">
+                                Kèo 0K/-25K
+                            </button>
                         </div>
                     </td>
-                    <td class="p-2.5 text-center">
-                        <span class="text-[11px] font-semibold text-sky-400 bg-sky-950/80 border border-sky-800 px-2 py-1 rounded-md inline-block">
-                            ${currentDay.ruleType === '15k' ? '15k (+5/-15)' : (currentDay.ruleType === '25k' ? '0k/-25k' : 'Tự Do')}
-                        </span>
+                    <td class="p-3 text-center">
+                        <span class="text-xs font-semibold px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Hoàn thành</span>
                     </td>
-                    <td class="p-2.5 text-center">
-                        <button onclick="deleteMatch('${m.id}')" class="text-slate-500 hover:text-rose-400 p-1 transition-colors" title="Xóa trận này">
+                    <td class="p-3 text-center">
+                        <button onclick="deleteMatch('${m.id}')" class="text-gray-500 hover:text-rose-400 p-1.5 transition-colors">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
                     </td>
@@ -491,296 +523,409 @@
             });
         }
 
-        function renderPlayerSummary() {
-            const { playerStats } = computeDayStats(appData.activeDate);
-            const tbody = document.getElementById('playerSummaryBody');
-            const tfoot = document.getElementById('playerSummaryFoot');
+        function renderPlayerSelect(matchId, roleKey, currentValue) {
+            let options = appState.players.map(p => 
+                `<option value="${p}" ${p === currentValue ? 'selected' : ''}>${p}</option>`
+            ).join('');
+            return `<select onchange="updateMatchPlayer('${matchId}', '${roleKey}', this.value)" class="w-full bg-navy-950 border border-slate-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-amber-500">
+                <option value="">-- Chọn VĐV --</option>
+                ${options}
+            </select>`;
+        }
+
+        function addNewMatch() {
+            const activeDate = getActiveDateObj();
+            if (!activeDate) return;
+            
+            const newMatch = {
+                id: 'm-' + Date.now(),
+                w1: appState.players[0] || '',
+                w2: appState.players[1] || '',
+                l1: appState.players[2] || '',
+                l2: appState.players[3] || '',
+                scoreW: 11,
+                scoreL: 5,
+                customStakeWin: null,
+                customStakeLoss: null,
+                isPreset25: false
+            };
+            activeDate.matches.push(newMatch);
+            renderAll();
+        }
+
+        function updateMatchPlayer(matchId, roleKey, val) {
+            const activeDate = getActiveDateObj();
+            if (!activeDate) return;
+            const match = activeDate.matches.find(m => m.id === matchId);
+            if (match) {
+                match[roleKey] = val;
+                renderFinanceTable();
+            }
+        }
+
+        function updateMatchScore(matchId, side, val) {
+            const activeDate = getActiveDateObj();
+            if (!activeDate) return;
+            const match = activeDate.matches.find(m => m.id === matchId);
+            if (match) {
+                if (side === 'w') match.scoreW = parseInt(val) || 0;
+                if (side === 'l') match.scoreL = parseInt(val) || 0;
+                renderMatchesTable();
+                renderFinanceTable();
+            }
+        }
+
+        function toggleMatchPreset25(matchId) {
+            const activeDate = getActiveDateObj();
+            if (!activeDate) return;
+            const match = activeDate.matches.find(m => m.id === matchId);
+            if (match) {
+                match.isPreset25 = !match.isPreset25;
+                renderMatchesTable();
+                renderFinanceTable();
+            }
+        }
+
+        function deleteMatch(matchId) {
+            const activeDate = getActiveDateObj();
+            if (!activeDate) return;
+            activeDate.matches = activeDate.matches.filter(m => m.id !== matchId);
+            renderAll();
+        }
+
+        function calculateFinanceData(activeDate) {
+            if (!activeDate) return [];
+
+            const stats = {};
+            appState.players.forEach(p => {
+                stats[p] = {
+                    name: p,
+                    totalMatches: 0,
+                    wins: 0,
+                    losses: 0,
+                    betEarnings: 0,
+                    btcFee: 0,
+                    finalTotal: 0
+                };
+            });
+
+            activeDate.matches.forEach(m => {
+                const isHam = parseInt(m.scoreL) === 0 && parseInt(m.scoreW) > 0;
+                let winAmt = m.customStakeWin !== null ? m.customStakeWin : (isHam ? 10 : 5);
+                let lossAmt = m.customStakeLoss !== null ? m.customStakeLoss : (isHam ? -30 : -15);
+
+                if (m.isPreset25) {
+                    winAmt = 0;
+                    lossAmt = -25;
+                }
+
+                // Process Winners
+                [m.w1, m.w2].forEach(p => {
+                    if (p && stats[p]) {
+                        stats[p].totalMatches += 1;
+                        stats[p].wins += 1;
+                        stats[p].betEarnings += winAmt;
+                    }
+                });
+
+                // Process Losers
+                [m.l1, m.l2].forEach(p => {
+                    if (p && stats[p]) {
+                        stats[p].totalMatches += 1;
+                        stats[p].losses += 1;
+                        stats[p].betEarnings += lossAmt;
+                    }
+                });
+            });
+
+            // Calculate BTC fee & final totals
+            const result = [];
+            Object.values(stats).forEach(p => {
+                // Only include players who played matches or exist in record
+                if (p.totalMatches > 0) {
+                    if (p.totalMatches < appState.settings.minMatchesRequired) {
+                        p.btcFee = appState.settings.btcFeeAmount;
+                    } else {
+                        p.btcFee = 0;
+                    }
+                    p.finalTotal = p.betEarnings + p.btcFee;
+                    result.push(p);
+                }
+            });
+
+            return result;
+        }
+
+        function renderFinanceTable() {
+            const activeDate = getActiveDateObj();
+            const tbody = document.getElementById('finance-table-body');
+            const tfoot = document.getElementById('finance-table-foot');
             tbody.innerHTML = '';
+            tfoot.innerHTML = '';
 
-            let grandTotal = 0;
-            let totalPlayed = 0;
+            const data = calculateFinanceData(activeDate);
 
-            appData.players.forEach((p, idx) => {
-                const stat = playerStats[p] || { played: 0, wins: 0, losses: 0, balance: 0, paid: false };
-                grandTotal += stat.balance;
-                totalPlayed += stat.played;
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="p-6 text-center text-gray-500 italic">Chưa có dữ liệu vận động viên thi đấu.</td></tr>`;
+                return;
+            }
+
+            let sumMatches = 0, sumWins = 0, sumLosses = 0, sumKeo = 0, sumBTC = 0, sumFinal = 0;
+
+            data.forEach((row, idx) => {
+                sumMatches += row.totalMatches;
+                sumWins += row.wins;
+                sumLosses += row.losses;
+                sumKeo += row.betEarnings;
+                sumBTC += row.btcFee;
+                sumFinal += row.finalTotal;
+
+                const paymentInfo = (activeDate.payments && activeDate.payments[row.name]) || { isPaid: false, note: '' };
+                const isAdmin = appState.role === 'admin';
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-800/40 transition-colors";
-
-                const balanceClass = stat.balance > 0 ? "text-emerald-400 font-bold" : (stat.balance < 0 ? "text-rose-400 font-bold" : "text-slate-400");
+                tr.className = "hover:bg-navy-900/60 transition-colors border-b border-sheet-border/40";
 
                 tr.innerHTML = `
-                    <td class="p-3 text-center text-slate-400 font-medium">${idx + 1}</td>
-                    <td class="p-3 font-semibold text-slate-100">${p}</td>
-                    <td class="p-3 text-center text-slate-300">${stat.played}</td>
-                    <td class="p-3 text-center text-emerald-400 font-medium">${stat.wins}</td>
-                    <td class="p-3 text-center text-rose-400 font-medium">${stat.losses}</td>
-                    <td class="p-3 text-right ${balanceClass} text-sm">${formatMoney(stat.balance)}</td>
-                    <td class="p-3 text-center">
-                        <input type="checkbox" ${stat.paid ? 'checked' : ''} ${!isAdmin ? 'disabled' : ''} onchange="togglePaymentStatus('${p}', this.checked)" class="w-4 h-4 rounded border-slate-700 text-sky-600 focus:ring-sky-500 bg-slate-900 cursor-pointer disabled:opacity-50">
+                    <td class="p-3 text-center font-bold text-gray-400">${idx + 1}</td>
+                    <td class="p-3 font-semibold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-user text-xs text-amber-500"></i>
+                        <span>${row.name}</span>
+                    </td>
+                    <td class="p-3 text-center font-semibold text-gray-300">${row.totalMatches}</td>
+                    <td class="p-3 text-center text-emerald-400 font-bold">${row.wins}</td>
+                    <td class="p-3 text-center text-rose-400 font-bold">${row.losses}</td>
+                    <td class="p-3 text-right font-bold ${row.betEarnings >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                        ${row.betEarnings > 0 ? '+' : ''}${row.betEarnings}K
+                    </td>
+                    <td class="p-3 text-right font-bold text-rose-400">
+                        ${row.btcFee !== 0 ? row.btcFee + 'K' : '0K'}
+                    </td>
+                    <td class="p-3 text-right font-black text-sm ${row.finalTotal >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                        ${row.finalTotal > 0 ? '+' : ''}${row.finalTotal}K
                     </td>
                     <td class="p-3 text-center">
-                        <button onclick="removePlayer('${p}')" class="text-slate-500 hover:text-rose-400 transition-colors">
-                            <i class="fa-solid fa-user-minus"></i>
-                        </button>
+                        <input type="checkbox" ${paymentInfo.isPaid ? 'checked' : ''} ${!isAdmin ? 'disabled' : ''} 
+                            onchange="updatePaymentStatus('${row.name}', 'isPaid', this.checked)"
+                            class="w-4 h-4 rounded text-amber-500 bg-navy-950 border-slate-700 focus:ring-amber-500 cursor-pointer disabled:cursor-not-allowed">
+                    </td>
+                    <td class="p-3">
+                        <input type="text" value="${paymentInfo.note || ''}" ${!isAdmin ? 'disabled' : ''} 
+                            placeholder="${isAdmin ? 'Ghi chú...' : ''}"
+                            onchange="updatePaymentStatus('${row.name}', 'note', this.value)"
+                            class="w-full bg-navy-950 border border-slate-800 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-amber-500 disabled:bg-transparent disabled:border-none">
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
 
+            // Footer Total Row
             tfoot.innerHTML = `
                 <tr>
-                    <td colspan="2" class="p-3 text-sky-300 uppercase">TỔNG CỘNG:</td>
-                    <td class="p-3 text-center text-sky-300">${totalPlayed / 2} Trận</td>
-                    <td colspan="2" class="p-3"></td>
-                    <td class="p-3 text-right text-amber-400 font-black text-base">${formatMoney(grandTotal)}</td>
-                    <td colspan="2"></td>
+                    <td colspan="2" class="p-3 text-center uppercase tracking-wider text-amber-400">TỔNG CỘNG</td>
+                    <td class="p-3 text-center text-white">${sumMatches}</td>
+                    <td class="p-3 text-center text-emerald-400">${sumWins}</td>
+                    <td class="p-3 text-center text-rose-400">${sumLosses}</td>
+                    <td class="p-3 text-right ${sumKeo >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${sumKeo > 0 ? '+' : ''}${sumKeo}K</td>
+                    <td class="p-3 text-right text-rose-400">${sumBTC}K</td>
+                    <td class="p-3 text-right text-sm ${sumFinal >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${sumFinal > 0 ? '+' : ''}${sumFinal}K</td>
+                    <td colspan="2" class="p-3 text-center text-xs text-gray-400 font-normal">Đã cân bằng thu/chi</td>
                 </tr>
             `;
         }
 
-        function addNewMatch() {
-            const currentDay = appData.days[appData.activeDate];
-            if (!currentDay) return;
+        function updatePaymentStatus(playerName, key, value) {
+            const activeDate = getActiveDateObj();
+            if (!activeDate) return;
+            if (!activeDate.payments) activeDate.payments = {};
+            if (!activeDate.payments[playerName]) activeDate.payments[playerName] = { isPaid: false, note: '' };
 
-            const newId = 'm_' + Date.now();
-            currentDay.matches.push({
-                id: newId,
-                p1_1: appData.players[0] || "",
-                p1_2: appData.players[1] || "",
-                s1: 11,
-                s2: 8,
-                p2_1: appData.players[2] || "",
-                p2_2: appData.players[3] || "",
-                customRule: "default"
-            });
-            saveAppData();
-            renderUI();
+            activeDate.payments[playerName][key] = value;
         }
 
-        function updateMatch(id, field, value) {
-            const currentDay = appData.days[appData.activeDate];
-            const m = currentDay.matches.find(x => x.id === id);
-            if (m) {
-                m[field] = value;
-                saveAppData();
-                renderUI();
-            }
-        }
-
-        function deleteMatch(id) {
-            const currentDay = appData.days[appData.activeDate];
-            currentDay.matches = currentDay.matches.filter(x => x.id !== id);
-            saveAppData();
-            renderUI();
-        }
-
-        function toggleAdminMode() {
-            if (!isAdmin) {
-                const pwd = prompt("Nhập mật khẩu BTC (Mặc định: 123456):");
-                if (pwd === "123456" || pwd === "123") {
-                    isAdmin = true;
-                    document.getElementById('adminLockIcon').className = "fa-solid fa-lock-open text-emerald-400";
-                    document.getElementById('adminText').innerText = "Quyền BTC: Bật";
-                    document.getElementById('adminToggleBtn').className = "px-3.5 py-2 text-xs sm:text-sm font-semibold text-emerald-300 bg-emerald-950/80 border border-emerald-700 rounded-xl transition-all flex items-center gap-2 shadow";
-                } else {
-                    alert("Sai mật khẩu!");
-                }
+        function toggleSummaryMatrixModal(show) {
+            const modal = document.getElementById('summary-modal');
+            if (show) {
+                renderSummaryMatrix();
+                modal.classList.remove('hidden');
             } else {
-                isAdmin = false;
-                document.getElementById('adminLockIcon').className = "fa-solid fa-lock text-amber-500";
-                document.getElementById('adminText').innerText = "Quyền BTC: Tắt";
-                document.getElementById('adminToggleBtn').className = "px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-300 bg-slate-900/80 hover:bg-slate-900 rounded-xl border border-slate-700 transition-all flex items-center gap-2";
-            }
-            renderPlayerSummary();
-        }
-
-        function togglePaymentStatus(player, isChecked) {
-            const currentDay = appData.days[appData.activeDate];
-            if (!currentDay.payments) currentDay.payments = {};
-            currentDay.payments[player] = isChecked;
-            saveAppData();
-        }
-
-        function changeActiveDate(newDate) {
-            appData.activeDate = newDate;
-            saveAppData();
-            renderUI();
-        }
-
-        function addNewDayPrompt() {
-            const today = new Date().toISOString().split('T')[0];
-            const dateStr = prompt("Nhập ngày mới (YYYY-MM-DD):", today);
-            if (dateStr && dateStr.trim()) {
-                const formatted = dateStr.trim();
-                if (!appData.days[formatted]) {
-                    appData.days[formatted] = {
-                        ruleType: "15k",
-                        customWin: 5000,
-                        customLose: 15000,
-                        matches: [],
-                        payments: {}
-                    };
-                }
-                appData.activeDate = formatted;
-                saveAppData();
-                renderUI();
+                modal.classList.add('hidden');
             }
         }
 
-        function editDayPrompt() {
-            const oldDate = appData.activeDate;
-            const newDate = prompt("Đổi tên ngày đấu này:", oldDate);
-            if (newDate && newDate.trim() && newDate !== oldDate) {
-                const formatted = newDate.trim();
-                appData.days[formatted] = appData.days[oldDate];
-                delete appData.days[oldDate];
-                appData.activeDate = formatted;
-                saveAppData();
-                renderUI();
-            }
-        }
-
-        function deleteCurrentDay() {
-            const dates = Object.keys(appData.days);
-            if (dates.length <= 1) {
-                alert("Không thể xóa ngày duy nhất còn lại!");
-                return;
-            }
-            if (confirm(`Bạn có chắc chắn muốn xóa dữ liệu ngày ${appData.activeDate}?`)) {
-                delete appData.days[appData.activeDate];
-                appData.activeDate = Object.keys(appData.days)[0];
-                saveAppData();
-                renderUI();
-            }
-        }
-
-        function addNewPlayerPrompt() {
-            const name = prompt("Nhập tên Vận Động Viên mới:");
-            if (name && name.trim()) {
-                const cleanName = name.trim();
-                if (!appData.players.includes(cleanName)) {
-                    appData.players.push(cleanName);
-                    saveAppData();
-                    renderUI();
-                } else {
-                    alert("VĐV này đã có trong danh sách!");
-                }
-            }
-        }
-
-        function removePlayer(name) {
-            if (confirm(`Xóa VĐV "${name}" khỏi danh sách?`)) {
-                appData.players = appData.players.filter(p => p !== name);
-                saveAppData();
-                renderUI();
-            }
-        }
-
-        function openDaySummaryModal() {
-            const dates = Object.keys(appData.days).sort();
-            const header = document.getElementById('daySummaryHeader');
-            const tbody = document.getElementById('daySummaryBody');
-            const tfoot = document.getElementById('daySummaryFoot');
-
-            let headHTML = `<tr><th class="p-3 w-10 text-center">STT</th><th class="p-3">VẬN ĐỘNG VIÊN</th>`;
-            dates.forEach(d => {
-                headHTML += `<th class="p-3 text-center">${d}</th>`;
-            });
-            headHTML += `<th class="p-3 text-right">TỔNG CỘNG</th></tr>`;
-            header.innerHTML = headHTML;
-
-            // Compute data per day
-            const allDayStats = {};
-            const totalsPerDay = {};
-            dates.forEach(d => {
-                allDayStats[d] = computeDayStats(d).playerStats;
-                totalsPerDay[d] = 0;
-            });
-
+        function renderSummaryMatrix() {
+            const thead = document.getElementById('summary-matrix-head');
+            const tbody = document.getElementById('summary-matrix-body');
+            thead.innerHTML = '';
             tbody.innerHTML = '';
-            let grandTotalOverall = 0;
 
-            appData.players.forEach((p, idx) => {
-                let rowTotal = 0;
-                let trHTML = `<td class="p-3 text-center text-slate-400">${idx + 1}</td><td class="p-3 font-semibold text-slate-100">${p}</td>`;
+            // Header row: Player Name | Date 1 | Date 2 | ... | Total Net
+            let headHTML = `
+                <tr class="bg-sheet-header text-gray-300 uppercase border-b border-sheet-border">
+                    <th class="p-3 text-left min-w-[150px]">Vận Động Viên</th>
+            `;
+            appState.dates.forEach(d => {
+                headHTML += `<th class="p-3 text-center min-w-[100px]">${d.dateStr}</th>`;
+            });
+            headHTML += `<th class="p-3 text-right min-w-[120px] bg-navy-900">TỔNG THỰC TẾ</th></tr>`;
+            thead.innerHTML = headHTML;
 
-                dates.forEach(d => {
-                    const bal = (allDayStats[d][p] ? allDayStats[d][p].balance : 0);
-                    rowTotal += bal;
-                    totalsPerDay[d] += bal;
+            // Player Net Summary Map
+            appState.players.forEach(p => {
+                let rowHTML = `<tr class="hover:bg-navy-900/50 border-b border-sheet-border/40">
+                    <td class="p-3 font-semibold text-white">${p}</td>`;
+                let totalNet = 0;
 
-                    const color = bal > 0 ? "text-emerald-400 font-bold" : (bal < 0 ? "text-rose-400 font-bold" : "text-slate-500");
-                    trHTML += `<td class="p-3 text-center ${color}">${formatMoney(bal)}</td>`;
+                appState.dates.forEach(d => {
+                    const dayData = calculateFinanceData(d);
+                    const pStat = dayData.find(x => x.name === p);
+                    const val = pStat ? pStat.finalTotal : 0;
+                    totalNet += val;
+
+                    rowHTML += `<td class="p-3 text-center font-bold ${val > 0 ? 'text-emerald-400' : val < 0 ? 'text-rose-400' : 'text-gray-500'}">
+                        ${val !== 0 ? (val > 0 ? '+' + val : val) + 'K' : '-'}
+                    </td>`;
                 });
 
-                grandTotalOverall += rowTotal;
-                const totalColor = rowTotal > 0 ? "text-emerald-400 font-black" : (rowTotal < 0 ? "text-rose-400 font-black" : "text-slate-400");
-                trHTML += `<td class="p-3 text-right ${totalColor}">${formatMoney(rowTotal)}</td>`;
+                rowHTML += `<td class="p-3 text-right font-black bg-navy-900 ${totalNet > 0 ? 'text-emerald-400' : totalNet < 0 ? 'text-rose-400' : 'text-gray-300'}">
+                    ${totalNet > 0 ? '+' : ''}${totalNet}K
+                </td></tr>`;
 
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-800/50";
-                tr.innerHTML = trHTML;
-                tbody.appendChild(tr);
+                tbody.innerHTML += rowHTML;
             });
-
-            // Footer
-            let footHTML = `<tr><td colspan="2" class="p-3 text-sky-300 uppercase">TỔNG CỘNG NGÀY:</td>`;
-            dates.forEach(d => {
-                footHTML += `<td class="p-3 text-center text-amber-400 font-extrabold">${formatMoney(totalsPerDay[d])}</td>`;
-            });
-            footHTML += `<td class="p-3 text-right text-amber-300 font-black text-base">${formatMoney(grandTotalOverall)}</td></tr>`;
-            tfoot.innerHTML = footHTML;
-
-            document.getElementById('daySummaryModal').classList.remove('hidden');
         }
 
-        function closeDaySummaryModal() {
-            document.getElementById('daySummaryModal').classList.add('hidden');
-        }
-
-        function openSettingsModal() {
-            const currentDay = appData.days[appData.activeDate];
-            document.getElementById('presetRuleSelect').value = currentDay.ruleType || '15k';
-            document.getElementById('customWinStake').value = currentDay.customWin || 5000;
-            document.getElementById('customLoseStake').value = currentDay.customLose || 15000;
-            handlePresetChange(currentDay.ruleType || '15k');
-
-            document.getElementById('settingsModal').classList.remove('hidden');
-        }
-
-        function closeSettingsModal() {
-            document.getElementById('settingsModal').classList.add('hidden');
-        }
-
-        function handlePresetChange(val) {
-            const customDiv = document.getElementById('customStakeInputs');
-            if (val === 'custom') {
-                customDiv.classList.remove('hidden');
+        function toggleVDVModal(show) {
+            const modal = document.getElementById('vdv-modal');
+            if (show) {
+                renderVDVList();
+                modal.classList.remove('hidden');
             } else {
-                customDiv.classList.add('hidden');
+                modal.classList.add('hidden');
             }
         }
 
-        function saveMatchSettings() {
-            const currentDay = appData.days[appData.activeDate];
-            currentDay.ruleType = document.getElementById('presetRuleSelect').value;
-            currentDay.customWin = parseInt(document.getElementById('customWinStake').value) || 5000;
-            currentDay.customLose = parseInt(document.getElementById('customLoseStake').value) || 15000;
+        function renderVDVList() {
+            const tbody = document.getElementById('vdv-list-body');
+            tbody.innerHTML = '';
 
-            saveAppData();
-            renderUI();
-            closeSettingsModal();
+            appState.players.forEach((p, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-navy-900/50";
+                tr.innerHTML = `
+                    <td class="p-2.5 text-center text-gray-400">${idx + 1}</td>
+                    <td class="p-2.5 font-medium text-white">${p}</td>
+                    <td class="p-2.5 text-center">
+                        <button onclick="deleteVDV('${p}')" class="text-rose-400 hover:text-rose-300 px-2 py-1 text-xs">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function addVDV() {
+            if (appState.role !== 'admin') return alert('Chỉ Admin mới có quyền sửa VĐV!');
+            const input = document.getElementById('new-vdv-name');
+            const name = input.value.trim();
+            if (!name) return;
+            if (appState.players.includes(name)) {
+                alert('Tên VĐV này đã tồn tại!');
+                return;
+            }
+
+            appState.players.push(name);
+            input.value = '';
+            renderVDVList();
+            renderAll();
+        }
+
+        function deleteVDV(name) {
+            if (appState.role !== 'admin') return alert('Chỉ Admin mới có quyền xóa VĐV!');
+            if (confirm(`Bạn có chắc muốn xóa VĐV "${name}"?`)) {
+                appState.players = appState.players.filter(p => p !== name);
+                renderVDVList();
+                renderAll();
+            }
         }
 
         function exportToExcel() {
-            const dates = Object.keys(appData.days).sort();
-            const { playerStats } = computeDayStats(appData.activeDate);
+            const activeDate = getActiveDateObj();
+            if (!activeDate) return;
 
-            const exportData = appData.players.map((p, idx) => {
-                const stat = playerStats[p] || { played: 0, wins: 0, losses: 0, balance: 0, paid: false };
-                return {
-                    "STT": idx + 1,
-                    "Vận Động Viên": p,
-                    "Số Trận": stat.played
+            const financeData = calculateFinanceData(activeDate);
+
+            // Build Sheet Data
+            const sheetData = [
+                ["BẢNG TỔNG HỢP KÈO 15K - PICKLEBALL"],
+                ["Ngày thi đấu:", activeDate.dateStr],
+                [""],
+                ["BẢNG THỐNG KÊ THÀNH TIỀN THỰC TẾ"],
+                ["STT", "Tên VĐV", "Số Trận", "Thắng", "Thua", "Tổng Kèo (K)", "Tiền BTC (K)", "Thành Tiền (K)", "Trạng Thái Thanh Toán"]
+            ];
+
+            financeData.forEach((r, idx) => {
+                const payment = (activeDate.payments && activeDate.payments[r.name]) || { isPaid: false };
+                sheetData.push([
+                    idx + 1,
+                    r.name,
+                    r.totalMatches,
+                    r.wins,
+                    r.losses,
+                    r.betEarnings,
+                    r.btcFee,
+                    r.finalTotal,
+                    payment.isPaid ? 'Đã Thanh Toán' : 'Chưa Thanh Toán'
+                ]);
+            });
+
+            sheetData.push([""]);
+            sheetData.push(["DANH SÁCH TRẬN ĐẤU"]);
+            sheetData.push(["STT", "Đội Thắng 1", "Đội Thắng 2", "Đội Thua 1", "Đội Thua 2", "Tỷ Số Thắng", "Tỷ Số Thua"]);
+
+            activeDate.matches.forEach((m, idx) => {
+                sheetData.push([
+                    idx + 1,
+                    m.w1,
+                    m.w2,
+                    m.l1,
+                    m.l2,
+                    m.scoreW,
+                    m.scoreL
+                ]);
+            });
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(sheetData);
+            XLSX.utils.book_append_sheet(wb, ws, "KeoPickleball");
+
+            XLSX.writeFile(wb, `Keo_Pickleball_${activeDate.dateStr.replace(/\//g, '-')}.xlsx`);
+        }
+
+        function renderDateBadges() {
+            const container = document.getElementById('date-badges-container');
+            container.innerHTML = '';
+
+            appState.dates.forEach(d => {
+                const isActive = d.id === appState.activeDateId;
+                const btn = document.createElement('button');
+                btn.onclick = () => setActiveDate(d.id);
+                btn.className = `px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
+                    isActive 
+                        ? 'bg-amber-500 text-slate-950 shadow-md font-bold' 
+                        : 'bg-navy-900 text-gray-300 border border-sheet-border hover:bg-slate-800'
+                }`;
+                btn.innerHTML = `<i class="fa-solid fa-calendar-day"></i> ${d.dateStr}`;
+                container.appendChild(btn);
+            });
+        }
+
+        function renderAll() {
+            renderDateBadges();
+            renderMatchesTable();
+            renderFinanceTable();
+        }
+    </script>
+</body>
+</html>
