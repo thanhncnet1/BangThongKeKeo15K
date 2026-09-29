@@ -1,931 +1,1246 @@
 <!DOCTYPE html>
-<html lang="vi" class="dark">
+<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BẢNG TỔNG HỢP KÈO 15K - Pickleball Manager</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLB PICKLEBALL - CMTD | Quản Lý & Thống Kê</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --primary-color: #0f172a;
+      --accent-color: #2563eb;
+      --score-border: #a855f7;
+      --card-bg: #ffffff;
+      --border-color: #cbd5e1;
+      --text-main: #1e293b;
+    }
+    * { box-sizing: border-box; }
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        navy: {
-                            800: '#0f172a',
-                            900: '#0b1329',
-                            950: '#060a17',
-                        },
-                        sheet: {
-                            header: '#1e293b',
-                            card: '#111827',
-                            border: '#334155',
-                            gold: '#fbbf24',
-                            emerald: '#10b981',
-                            rose: '#f43f5e'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f1f5f9;
+      color: var(--text-main);
+      margin: 0;
+      padding: 10px 6px;
+      min-height: 100vh;
+    }
+
+    .container { max-width: 1600px; margin: 0 auto; position: relative; }
     
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    .hero-banner {
+      background-image: url('banner.jpg');
+      background-size: 100% 100%;
+      background-position: center;
+      background-repeat: no-repeat;
+      width: 100%;
+      aspect-ratio: 16 / 6.2;
+      border-radius: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    }
+
+    .header-section {
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      z-index: 500;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .brand-title { 
+      display: flex; 
+      align-items: center; 
+      gap: 10px; 
+    }
+
+    .title-logo-img {
+      height: 36px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0px 2px 5px rgba(255,255,255,0.3));
+    }
+
+    .top-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 8px;
+      position: relative;
+    }
     
-    <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    .nav-item { position: relative; }
+    .nav-btn {
+      background: rgba(51, 65, 85, 0.9);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 11px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .nav-btn:hover { background-color: var(--accent-color); border-color: var(--accent-color); }
+    
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 115%;
+      left: 0;
+      min-width: 220px;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      border: 1px solid var(--border-color);
+      z-index: 9999 !important;
+      padding: 4px 0;
+      color: var(--text-main);
+    }
 
-    <!-- XLSX Export Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    .dropdown-menu.right-align { left: auto; right: 0; }
+    .dropdown-menu.show { display: block; }
+    .dropdown-item {
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #334155;
+    }
+    .dropdown-item:hover { background-color: #f1f5f9; color: var(--accent-color); }
+    .dropdown-divider { height: 1px; background-color: #e2e8f0; margin: 3px 0; }
+    
+    .cloud-status { font-size: 10px; padding: 3px 8px; border-radius: 15px; font-weight: bold; margin-left: auto; }
+    .cloud-online { background-color: #10b981; color: white; }
+    .cloud-syncing { background-color: #f59e0b; color: white; }
+    
+    .vdv-container { padding: 8px; width: 240px; }
+    .vdv-scroll-list { max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+    .vdv-item { background: #f8fafc; padding: 4px 6px; border-radius: 4px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
 
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #060a17;
-            color: #f3f4f6;
-        }
+    .btn { background-color: var(--accent-color); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: 700; font-size: 11px; transition: all 0.2s; white-space: nowrap; }
+    .btn-sm { padding: 3px 6px; font-size: 10px; }
+    .btn-green { background-color: #10b981; }
+    .btn-red { background-color: #ef4444; }
+    .btn-orange { background-color: #f59e0b; color: white; }
+    .btn-icon { background: none; border: none; cursor: pointer; font-size: 12px; padding: 2px 3px; }
 
-        /* Custom scrollbar for data tables */
-        .custom-scrollbar::-webkit-scrollbar {
-            height: 8px;
-            width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
+    .card {
+      background: var(--card-bg);
+      padding: 10px 8px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 10;
+      border: 1px solid #e2e8f0;
+    }
+    .card-header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 6px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .card-title { font-size: 13px; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase; }
+    .table-actions-toolbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    
+    .table-responsive { 
+      width: 100%;
+      overflow-x: auto; 
+      -webkit-overflow-scrolling: touch; 
+      border-radius: 6px; 
+      border: 1px solid #cbd5e1; 
+    }
+    
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      font-size: 11px; 
+      min-width: 680px; 
+      table-layout: fixed; 
+    }
+    th, td { border: 1px solid #cbd5e1; padding: 5px 2px; text-align: center; vertical-align: middle; word-wrap: break-word; }
+    th { background-color: #f8fafc; color: #334155; font-weight: 800; font-size: 10px; text-transform: uppercase; }
+    
+    .th-team-a { background-color: #15803d; color: #ffffff !important; }
+    .th-team-b { background-color: #0369a1; color: #ffffff !important; }
+    .th-pick1 { background-color: #dcfce7; color: #166534; }
+    .th-pick2 { background-color: #fee2e2; color: #991b1b; }
+    .th-money { background-color: #fef3c7; color: #92400e; }
+    
+    select { 
+      width: 100%; 
+      padding: 3px 1px; 
+      border: 1px solid #cbd5e1; 
+      border-radius: 4px; 
+      font-size: 10px; 
+      font-weight: 700; 
+      background: #fff; 
+      text-overflow: ellipsis; 
+      cursor: pointer; 
+    }
+    input[type="text"], input[type="number"] { width: 100%; padding: 3px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 10px; background: #fff; text-align: center; }
 
-        /* Compact inputs */
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-    </style>
+    .score-input { 
+      width: 36px !important; 
+      height: 24px; 
+      padding: 0 !important; 
+      font-weight: 800; 
+      text-align: center; 
+      font-size: 11px; 
+      border: 1.5px solid var(--score-border) !important; 
+      border-radius: 4px; 
+      background: #ffffff; 
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ham-text { 
+      background-color: #ef4444; 
+      color: white; 
+      font-weight: 900; 
+      font-size: 9px; 
+      padding: 2px 0; 
+      border-radius: 3px; 
+      display: block; 
+      width: 100%; 
+      text-align: center; 
+      line-height: 1;
+    }
+
+    .txt-win { color: #16a34a; font-weight: 800; }
+    .txt-lose { color: #dc2626; font-weight: 800; }
+    .note-paid { color: #16a34a; font-weight: 800; }   
+    .note-unpaid { color: #ef4444; font-weight: 800; } 
+    .checkbox-cell { transform: scale(1.15); cursor: pointer; }
+    .total-summary-row { background-color: #f8fafc; font-weight: 800; }
+
+    .summary-result-box {
+      margin-top: 12px;
+      width: 100%;
+      background: #ffffff;
+      border: 2px solid #0f4c81;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .summary-table-mobile { width: 100% !important; min-width: 100% !important; table-layout: auto !important; }
+    .summary-table-mobile th { background-color: #0f4c81 !important; color: #ffffff !important; font-size: 11px; padding: 6px 4px; }
+    .summary-table-mobile td { padding: 8px 4px; font-size: 11px; }
+
+    .status-leading { color: #16a34a; font-weight: 900; }
+    .status-losing { color: #dc2626; font-weight: 900; }
+    .status-draw { color: #d97706; font-weight: 900; }
+
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 10000; align-items: center; justify-content: center; }
+    .modal.show { display: flex; }
+    .modal-content { background: white; padding: 16px; border-radius: 10px; width: 92%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 900px) { .grid-2col { grid-template-columns: 1fr; } }
+
+    @media (max-width: 600px) {
+      body { padding: 4px 2px; }
+      .hero-banner { aspect-ratio: 16 / 7; }
+      .title-logo-img { height: 28px; }
+      .card { padding: 6px 4px; }
+      .card-title { font-size: 11px; }
+      .nav-btn { font-size: 10px; padding: 4px 6px; }
+      table { min-width: 620px; font-size: 10px; }
+      th, td { padding: 3px 1px; }
+      select { font-size: 9.5px; padding: 1px 0; }
+      .score-input { width: 32px !important; height: 22px; }
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-navy-950 text-gray-100 flex flex-col justify-between">
+<body>
+  <div class="container">
+    <div class="hero-banner"></div>
 
-    <div>
-        <!-- Top Banner Header -->
-        <header class="w-full bg-gradient-to-r from-navy-900 via-navy-800 to-navy-900 border-b border-sheet-border shadow-lg">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                
-                <!-- Logo & Title -->
-                <div class="flex items-center space-x-3 text-center md:text-left">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500 to-emerald-500 p-0.5 shadow-md flex-shrink-0">
-                        <div class="w-full h-full bg-navy-950 rounded-[10px] flex items-center justify-center">
-                            <i class="fa-solid fa-table-tennis-paddle-ball text-2xl text-amber-400"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
-                            <span>BẢNG TỔNG HỢP KÈO 15K</span>
-                            <span class="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">PRO</span>
-                        </h1>
-                        <p class="text-xs text-gray-400">Hệ thống Quản lý Kèo & Giải đấu Pickleball Chuyên Nghiệp</p>
-                    </div>
-                </div>
-
-                <!-- Global Quick Settings & Role Switcher -->
-                <div class="flex flex-wrap items-center gap-3">
-                    <!-- Role Switcher -->
-                    <div class="bg-navy-900 border border-sheet-border rounded-lg p-1 flex items-center text-xs">
-                        <button id="role-viewer" onclick="setRole('viewer')" class="px-3 py-1.5 rounded-md font-medium transition-all">
-                            <i class="fa-solid fa-eye mr-1"></i> Xem
-                        </button>
-                        <button id="role-admin" onclick="setRole('admin')" class="px-3 py-1.5 rounded-md font-medium transition-all">
-                            <i class="fa-solid fa-user-shield mr-1"></i> Admin
-                        </button>
-                    </div>
-
-                    <!-- Export Excel Button -->
-                    <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow transition-all">
-                        <i class="fa-solid fa-file-excel text-sm"></i>
-                        <span>Xuất Excel</span>
-                    </button>
-
-                    <!-- Manage VDV Button -->
-                    <button onclick="toggleVDVModal(true)" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow transition-all">
-                        <i class="fa-solid fa-users text-sm"></i>
-                        <span>Quản lý VĐV</span>
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-
-            <!-- Date Selection & Global Rules Bar -->
-            <section class="bg-sheet-card rounded-xl border border-sheet-border p-4 shadow-md space-y-4">
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    
-                    <!-- Date Badges -->
-                    <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1 lg:pb-0">
-                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1 mr-1">
-                            <i class="fa-regular fa-calendar-days text-amber-400"></i> Ngày:
-                        </span>
-                        <div id="date-badges-container" class="flex items-center gap-2">
-                            <!-- Dynamic Date Badges -->
-                        </div>
-                    </div>
-
-                    <!-- Date Action Buttons -->
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <button onclick="addNewDate()" class="bg-navy-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition-all">
-                            <i class="fa-solid fa-plus"></i> Thêm ngày
-                        </button>
-                        <button onclick="editCurrentDate()" class="bg-navy-800 hover:bg-slate-700 text-gray-300 border border-sheet-border text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition-all">
-                            <i class="fa-solid fa-pen"></i> Sửa ngày
-                        </button>
-                        <button onclick="deleteCurrentDate()" class="bg-navy-800 hover:bg-rose-950/40 text-rose-400 border border-rose-500/30 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition-all">
-                            <i class="fa-solid fa-trash"></i> Xóa ngày
-                        </button>
-                        <button onclick="toggleSummaryMatrixModal(true)" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition-all">
-                            <i class="fa-solid fa-chart-line"></i> Bảng tổng hợp các ngày
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Match Rules Quick Config Bar -->
-                <div class="pt-3 border-t border-sheet-border/60 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 text-xs">
-                    <div class="bg-navy-900/80 p-2.5 rounded-lg border border-sheet-border flex items-center justify-between">
-                        <span class="text-gray-400">Thua chuẩn:</span>
-                        <span class="font-bold text-rose-400" id="cfg-loss-stake">-15K</span>
-                    </div>
-                    <div class="bg-navy-900/80 p-2.5 rounded-lg border border-sheet-border flex items-center justify-between">
-                        <span class="text-gray-400">Thắng chuẩn:</span>
-                        <span class="font-bold text-emerald-400" id="cfg-win-stake">+5K</span>
-                    </div>
-                    <div class="bg-navy-900/80 p-2.5 rounded-lg border border-sheet-border flex items-center justify-between">
-                        <span class="text-gray-400">Thua HẦM (dưới 0):</span>
-                        <span class="font-bold text-rose-500" id="cfg-ham-loss">-30K</span>
-                    </div>
-                    <div class="bg-navy-900/80 p-2.5 rounded-lg border border-sheet-border flex items-center justify-between">
-                        <span class="text-gray-400">Tối thiểu trận:</span>
-                        <div class="flex items-center gap-1">
-                            <input type="number" id="cfg-min-matches" value="4" onchange="updateGlobalSettings()" class="w-10 bg-navy-950 border border-slate-700 rounded text-center text-amber-400 font-bold focus:outline-none focus:border-amber-500">
-                            <span class="text-gray-400">trận</span>
-                        </div>
-                    </div>
-                    <div class="bg-navy-900/80 p-2.5 rounded-lg border border-sheet-border flex items-center justify-between col-span-2 sm:col-span-1">
-                        <span class="text-gray-400">Tiền BTC:</span>
-                        <div class="flex items-center gap-1">
-                            <input type="number" id="cfg-btc-fee" value="-10" onchange="updateGlobalSettings()" class="w-14 bg-navy-950 border border-slate-700 rounded text-center text-rose-400 font-bold focus:outline-none focus:border-amber-500">
-                            <span class="text-gray-400">K</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="bg-sheet-card rounded-xl border border-sheet-border shadow-xl overflow-hidden">
-                <!-- Section Header -->
-                <div class="p-4 bg-navy-900 border-b border-sheet-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2.5 h-6 bg-amber-500 rounded-full"></div>
-                        <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                            BẢNG DANH SÁCH TRẬN ĐẤU
-                            <span id="match-count-badge" class="text-xs bg-slate-800 text-amber-400 font-medium px-2 py-0.5 rounded-full border border-slate-700">0 trận</span>
-                        </h2>
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                        <button onclick="addNewMatch()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-3 py-2 rounded-lg flex items-center gap-1.5 shadow transition-all">
-                            <i class="fa-solid fa-plus-circle"></i>
-                            <span>Thêm trận đấu</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Match Table Container -->
-                <div class="overflow-x-auto custom-scrollbar">
-                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
-                        <thead>
-                            <tr class="bg-sheet-header text-gray-300 font-semibold border-b border-sheet-border uppercase text-[11px] tracking-wider">
-                                <th class="p-3 w-12 text-center">STT</th>
-                                <th class="p-3 min-w-[160px]">Đội thắng (VĐV 1 & 2)</th>
-                                <th class="p-3 min-w-[160px]">Đội thua (VĐV 1 & 2)</th>
-                                <th class="p-3 w-28 text-center">Tỷ số (Thắng - Thua)</th>
-                                <th class="p-3 w-36 text-center">Mức Kèo</th>
-                                <th class="p-3 w-24 text-center">Trạng thái</th>
-                                <th class="p-3 w-16 text-center">Xóa</th>
-                            </tr>
-                        </thead>
-                        <tbody id="match-table-body" class="divide-y divide-sheet-border/50 text-gray-200">
-                            <!-- Dynamic Matches Content -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section class="bg-sheet-card rounded-xl border border-sheet-border shadow-xl overflow-hidden">
-                <!-- Section Header -->
-                <div class="p-4 bg-navy-900 border-b border-sheet-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2.5 h-6 bg-emerald-500 rounded-full"></div>
-                        <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                            BẢNG THỐNG KÊ THÀNH TIỀN THỰC TẾ
-                            <span class="text-xs bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded">Tự động tính toán</span>
-                        </h2>
-                    </div>
-                </div>
-
-                <!-- Financial Table Container -->
-                <div class="overflow-x-auto custom-scrollbar">
-                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
-                        <thead>
-                            <tr class="bg-sheet-header text-gray-300 font-semibold border-b border-sheet-border uppercase text-[11px] tracking-wider">
-                                <th class="p-3 w-12 text-center">STT</th>
-                                <th class="p-3 min-w-[150px]">Tên Vận Động Viên</th>
-                                <th class="p-3 w-20 text-center">Số Trận</th>
-                                <th class="p-3 w-20 text-center">Thắng</th>
-                                <th class="p-3 w-20 text-center">Thua</th>
-                                <th class="p-3 w-28 text-right">Tổng Kèo (K)</th>
-                                <th class="p-3 w-28 text-right">Tiền BTC (K)</th>
-                                <th class="p-3 w-32 text-right">Thành Tiền (K)</th>
-                                <th class="p-3 w-28 text-center">Thực Tế</th>
-                                <th class="p-3 min-w-[160px]">Ghi chú thanh toán</th>
-                            </tr>
-                        </thead>
-                        <tbody id="finance-table-body" class="divide-y divide-sheet-border/50 text-gray-200">
-                            <!-- Dynamic Financial Calculations -->
-                        </tbody>
-                        <tfoot id="finance-table-foot" class="bg-navy-900/90 font-bold border-t-2 border-sheet-border">
-                            <!-- Dynamic Foot Totals -->
-                        </tfoot>
-                    </table>
-                </div>
-            </section>
-
-        </main>
-    </div>
-
-
-    <!-- VDV Management Modal -->
-    <div id="vdv-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-sheet-card border border-sheet-border rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="p-4 bg-navy-900 border-b border-sheet-border flex items-center justify-between">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-users text-indigo-400"></i> Quản Lý Danh Sách VĐV
-                </h3>
-                <button onclick="toggleVDVModal(false)" class="text-gray-400 hover:text-white p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-            
-            <div class="p-4 space-y-4 overflow-y-auto custom-scrollbar flex-1">
-                <!-- Add New VDV Input -->
-                <div class="flex gap-2">
-                    <input type="text" id="new-vdv-name" placeholder="Nhập tên VĐV mới..." class="flex-1 bg-navy-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
-                    <button onclick="addVDV()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all">
-                        <i class="fa-solid fa-plus mr-1"></i> Thêm
-                    </button>
-                </div>
-
-                <!-- VDV List Table -->
-                <div class="border border-sheet-border rounded-lg overflow-hidden">
-                    <table class="w-full text-xs text-left">
-                        <thead class="bg-navy-900 text-gray-400 border-b border-sheet-border uppercase">
-                            <tr>
-                                <th class="p-2.5 w-12 text-center">STT</th>
-                                <th class="p-2.5">Họ và Tên VĐV</th>
-                                <th class="p-2.5 w-24 text-center">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody id="vdv-list-body" class="divide-y divide-sheet-border/50">
-                            <!-- Dynamic VDV Items -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="p-3 bg-navy-900 border-t border-sheet-border text-right">
-                <button onclick="toggleVDVModal(false)" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium px-4 py-2 rounded-lg">Đóng</button>
-            </div>
+    <div class="header-section">
+      <div class="header-top">
+        <div class="brand-title">
+          <img src="logo1.png" alt="Logo CMTD" class="title-logo-img">
+          <h2 style="margin:0; font-weight:900; color:#fff; font-size:16px;">CLB PICKLEBALL - CMTD</h2>
         </div>
-    </div>
+        <div id="cloudStatus" class="cloud-status cloud-syncing">☁️ Đang kết nối...</div>
+      </div>
 
-    <!-- Multi-day Summary Matrix Modal -->
-    <div id="summary-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-sheet-card border border-sheet-border rounded-xl w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="p-4 bg-navy-900 border-b border-sheet-border flex items-center justify-between">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-chart-line text-amber-400"></i> BẢNG TỔNG HỢP CÁC NGÀY (CÁC VÒNG KÈO)
-                </h3>
-                <button onclick="toggleSummaryMatrixModal(false)" class="text-gray-400 hover:text-white p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
+      <div class="top-nav">
+        <div class="nav-item"><button class="nav-btn" onclick="goHome()">🏠 HOME</button></div>
 
-            <div class="p-4 overflow-x-auto custom-scrollbar flex-1">
-                <table class="w-full text-xs border-collapse">
-                    <thead id="summary-matrix-head">
-                        <!-- Dynamic Header Columns for Dates -->
-                    </thead>
-                    <tbody id="summary-matrix-body" class="divide-y divide-sheet-border/50 text-gray-200">
-                        <!-- Dynamic Player Summary Rows -->
-                    </tbody>
-                </table>
+        <div class="nav-item">
+          <button class="nav-btn" onclick="toggleMenu('menuVdv', event)">👥 PICK THỦ (<span id="vdvCountBtn">0</span>) ▾</button>
+          <div class="dropdown-menu" id="menuVdv">
+            <div class="vdv-container">
+              <div style="font-weight: 800; font-size: 11px; margin-bottom: 4px;">Danh Sách VĐV</div>
+              <div style="display: flex; gap: 4px; margin-bottom: 4px;">
+                <input type="text" id="newVdvInput" placeholder="Tên VĐV mới...">
+                <button class="btn btn-green btn-sm" onclick="addVDV()">Thêm</button>
+              </div>
+              <input type="text" id="searchVdvInput" placeholder="🔍 Tìm VĐV..." onkeyup="filterVDVList()" style="margin-bottom: 4px;">
+              <div class="vdv-scroll-list" id="vdvListContainer"></div>
             </div>
-
-            <div class="p-3 bg-navy-900 border-t border-sheet-border text-right">
-                <button onclick="toggleSummaryMatrixModal(false)" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium px-4 py-2 rounded-lg">Đóng</button>
-            </div>
+          </div>
         </div>
+
+        <div class="nav-item">
+          <button class="nav-btn" onclick="toggleMenu('menuSetting', event)">⚙️ SETTING ▾</button>
+          <div class="dropdown-menu" id="menuSetting">
+            <div class="dropdown-item" onclick="addDateTab()">📅 ➕ Thêm Ngày Mới</div>
+            <div class="dropdown-item" onclick="renameCurrentDate()">✏️ Sửa Tên Ngày Hiện Tại</div>
+            <div class="dropdown-item" style="color:red;" onclick="deleteCurrentDate()">🗑️ Xóa Ngày Hiện Tại</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" onclick="exportToExcel()">📥 Xuất Dữ Liệu Excel</div>
+          </div>
+        </div>
+
+        <div class="nav-item">
+          <button class="nav-btn" onclick="toggleMenu('menuTongHop', event)">📊 TỔNG HỢP CÁC NGÀY ▾</button>
+          <div class="dropdown-menu" id="menuTongHop">
+            <div id="datesMenuList"></div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" style="font-weight: 800; color: var(--accent-color);" onclick="switchTab('tonghop')">📊 Bảng Tổng Hợp Tất Cả Ngày</div>
+          </div>
+        </div>
+
+        <div class="nav-item">
+          <button class="nav-btn" onclick="toggleMenu('menuMini1', event)">🎮 MINI GAME 1 ▾</button>
+          <div class="dropdown-menu" id="menuMini1">
+            <div class="dropdown-item" onclick="switchTab('minigame1')">▶️ Lịch Thi Đấu Team A & B (24 Trận)</div>
+            <div class="dropdown-item" onclick="openGameModal(1)">⚙️ Chỉnh Sửa Nội Dung Game 1</div>
+          </div>
+        </div>
+
+        <div class="nav-item">
+          <button class="nav-btn" onclick="toggleMenu('menuMini2', event)">🏆 GIẢI ĐẤU MINI GAME 2 ▾</button>
+          <div class="dropdown-menu right-align" id="menuMini2">
+            <div class="dropdown-item" onclick="switchTab('minigame2')">🏆 Lịch Thi Đấu & BXH Bảng A, B</div>
+            <div class="dropdown-item" onclick="openGameModal(2)">⚙️ Chỉnh Sửa Nội Dung Game 2</div>
+          </div>
+        </div>
+      </div>
     </div>
+    
+    <div id="tabContent"></div>
+  </div>
 
-    <script>
-        // State Management
-        let appState = {
-            role: 'admin', // 'admin' or 'viewer'
-            activeDateId: null,
-            settings: {
-                minMatchesRequired: 4,
-                btcFeeAmount: -10,
-                defaultWin: 5,
-                defaultLoss: -15
-            },
-            players: [
-                "Nguyễn Văn A", "Trần Văn B", "Lê Văn C", "Phạm Văn D", 
-                "Hoàng Văn E", "Vũ Văn F", "Đặng Văn G", "Bùi Văn H"
-            ],
-            dates: [
-                {
-                    id: 'date-1',
-                    dateStr: '29/09/2026',
-                    matches: [
-                        { id: 'm1', w1: 'Nguyễn Văn A', w2: 'Trần Văn B', l1: 'Lê Văn C', l2: 'Phạm Văn D', scoreW: 11, scoreL: 4, customStakeWin: null, customStakeLoss: null, isPreset25: false },
-                        { id: 'm2', w1: 'Hoàng Văn E', w2: 'Vũ Văn F', l1: 'Đặng Văn G', l2: 'Bùi Văn H', scoreW: 11, scoreL: 0, customStakeWin: null, customStakeLoss: null, isPreset25: false }, // HẦM Match
-                        { id: 'm3', w1: 'Nguyễn Văn A', w2: 'Lê Văn C', l1: 'Trần Văn B', l2: 'Phạm Văn D', scoreW: 11, scoreL: 7, customStakeWin: null, customStakeLoss: null, isPreset25: false }
-                    ],
-                    payments: {} // playerId -> { isPaid: boolean, note: string }
-                }
-            ]
-        };
+  <div class="modal" id="gameModal">
+    <div class="modal-content">
+      <h3 style="margin-top:0; font-size:14px;" id="gameModalTitle">Chỉnh Sửa Mini Game</h3>
+      <textarea id="gameContentInput" rows="5" style="width:100%; padding:6px; border:1px solid #cbd5e1; border-radius:4px; font-size:11px;" placeholder="Nhập thể lệ trò chơi..."></textarea>
+      <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:10px;">
+        <button class="btn" style="background-color:#64748b;" onclick="closeGameModal()">Hủy</button>
+        <button class="btn btn-green" onclick="saveGameContent()">Lưu Thay Đổi</button>
+      </div>
+    </div>
+  </div>
 
-        // Initialize App
-        window.onload = function() {
-            if (appState.dates.length > 0) {
-                appState.activeDateId = appState.dates[0].id;
-            }
-            renderAll();
-        };
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCXxjGAHhAOtIo2DoqW6u8LW9NOUOI7PqY",
+      authDomain: "pickleball-cmtd.firebaseapp.com",
+      projectId: "pickleball-cmtd",
+      storageBucket: "pickleball-cmtd.firebasestorage.app",
+      messagingSenderId: "648591152243",
+      appId: "1:648591152243:web:3343caf2da821373070606",
+      measurementId: "G-T91KPDZFJR"
+    };
 
-        function setRole(role) {
-            appState.role = role;
-            document.getElementById('role-admin').className = role === 'admin' 
-                ? 'px-3 py-1.5 rounded-md font-medium transition-all bg-amber-500 text-slate-950 font-bold shadow' 
-                : 'px-3 py-1.5 rounded-md font-medium transition-all text-gray-400 hover:text-white';
-            document.getElementById('role-viewer').className = role === 'viewer' 
-                ? 'px-3 py-1.5 rounded-md font-medium transition-all bg-amber-500 text-slate-950 font-bold shadow' 
-                : 'px-3 py-1.5 rounded-md font-medium transition-all text-gray-400 hover:text-white';
-            
-            renderAll();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const docRef = db.collection("clubs").doc("cmtd_main_data");
+
+    const VDV_COLORS = [
+      "#d97706", "#2563eb", "#059669", "#dc2626", "#7c3aed", 
+      "#db2777", "#0284c7", "#15803d", "#b45309", "#4338ca",
+      "#c026d3", "#0d9488", "#ea580c", "#4f46e5"
+    ];
+
+    let vdvs = [];
+    let dates = [];
+    let matchesData = {};
+    let dateKeoMode = {}; 
+    let paymentStatus = {};
+    let miniGame1Content = "Lịch Thi Đấu Team A & Team B 24 Trận.";
+    let miniGame2Content = "Giải đấu Chia 2 Bảng A & B Thi đấu vòng tròn.";
+
+    let teamA_members = ["Tiến Thọ", "Thanh Đàm", "Thành Sóc", "Hà Giấy", "Minh Vượng", "Phú Mỗ", "Điền Chèm", "Hải Hà", "Quỳnh Cool"];
+    let teamB_members = ["Trí Đỏ", "Long Diễn", "Châu Sĩ", "Minh Hạnh", "Dũng Ngạc", "Lợi Trí", "Tuấn La", "Vân Đình", "Cẩm Ly"];
+
+    let miniGame1Matches = [];
+
+    // Dữ liệu Mini Game 2
+    let mini2PairsA = ["Đôi a", "Đôi b", "Đôi c", "Đôi d"];
+    let mini2PairsB = ["Đôi e", "Đôi f", "Đôi g", "Đôi h"];
+    let mini2MatchesA = [];
+    let mini2MatchesB = [];
+    let mini2Knockout = {
+      bkc1: { p1: "Nhất A", p2: "Nhì B", s1: "", s2: "" },
+      bkc2: { p1: "Nhất B", p2: "Nhì A", s1: "", s2: "" },
+      rank34: { p1: "Thua BKC1", p2: "Thua BKC2", s1: "", s2: "" },
+      final: { p1: "Thắng BKC1", p2: "Thắng BKC2", s1: "", s2: "" }
+    };
+
+    let currentTab = "";
+    let activeGameEditing = 1;
+
+    const ADMIN_PASSCODE = "123456";
+    let isAdminVerified = false;
+
+    const DEFAULT_MINI1_DATA = [
+      { id: 1, category: "Đôi nam", a1: "Tiến Thọ", a2: "Thanh Đàm", scoreA: "8", scoreB: "11", b1: "Trí Đỏ", b2: "Long Diễn" },
+      { id: 2, category: "Đôi nam", a1: "Thanh Đàm", a2: "Thành Sóc", scoreA: "5", scoreB: "11", b1: "Long Diễn", b2: "Châu Sĩ" },
+      { id: 3, category: "Đôi nam", a1: "Hà Giấy", a2: "Thành Sóc", scoreA: "6", scoreB: "11", b1: "Lợi Trí", b2: "Châu Sĩ" },
+      { id: 4, category: "Đôi nam", a1: "Thành Sóc", a2: "Minh Vượng", scoreA: "13", scoreB: "11", b1: "Châu Sĩ", b2: "Minh Hạnh" },
+      { id: 5, category: "Đôi nam", a1: "Thanh Đàm", a2: "Phú Mỗ", scoreA: "11", scoreB: "9", b1: "Long Diễn", b2: "Dũng Ngạc" },
+      { id: 6, category: "Đôi nam", a1: "Tiến Thọ", a2: "Hà Giấy", scoreA: "11", scoreB: "9", b1: "Trí Đỏ", b2: "Lợi Trí" },
+      { id: 7, category: "Đôi nam", a1: "Thanh Đàm", a2: "Điền Chèm", scoreA: "5", scoreB: "11", b1: "Long Diễn", b2: "Tuấn La" },
+      { id: 8, category: "Đôi nam", a1: "Phú Mỗ", a2: "Hà Giấy", scoreA: "11", scoreB: "9", b1: "Dũng Ngạc", b2: "Lợi Trí" },
+      { id: 9, category: "Đôi nam", a1: "Hà Giấy", a2: "Điền Chèm", scoreA: "11", scoreB: "7", b1: "Lợi Trí", b2: "Tuấn La" },
+      { id: 10, category: "Đôi nữ", a1: "Điền Chèm", a2: "Thành Sóc", scoreA: "11", scoreB: "6", b1: "Tuấn La", b2: "Châu Sĩ" },
+      { id: 11, category: "Đôi nam nữ", a1: "Thanh Đàm", a2: "Hải Hà", scoreA: "11", scoreB: "6", b1: "Long Diễn", b2: "Vân Đình" },
+      { id: 12, category: "Đôi nam", a1: "Tiến Thọ", a2: "Phú Mỗ", scoreA: "5", scoreB: "11", b1: "Trí Đỏ", b2: "Dũng Ngạc" },
+      { id: 13, category: "Đôi nam", a1: "Thanh Đàm", a2: "Hà Giấy", scoreA: "12", scoreB: "10", b1: "Long Diễn", b2: "Lợi Trí" },
+      { id: 14, category: "Đôi nữ", a1: "Quỳnh Cool", a2: "Hải Hà", scoreA: "11", scoreB: "7", b1: "Cẩm Ly", b2: "Vân Đình" },
+      { id: 15, category: "Đôi nam", a1: "Tiến Thọ", a2: "Điền Chèm", scoreA: "5", scoreB: "11", b1: "Trí Đỏ", b2: "Tuấn La" },
+      { id: 16, category: "Đôi nữ", a1: "Quỳnh Cool", a2: "Minh Vượng", scoreA: "11", scoreB: "8", b1: "Cẩm Ly", b2: "Minh Hạnh" },
+      { id: 17, category: "Đôi nam", a1: "Tiến Thọ", a2: "Thành Sóc", scoreA: "9", scoreB: "11", b1: "Trí Đỏ", b2: "Châu Sĩ" },
+      { id: 18, category: "Đôi nam", a1: "Phú Mỗ", a2: "Thành Sóc", scoreA: "7", scoreB: "11", b1: "Dũng Ngạc", b2: "Châu Sĩ" },
+      { id: 19, category: "Đôi nam", a1: "Phú Mỗ", a2: "Điền Chèm", scoreA: "8", scoreB: "11", b1: "Dũng Ngạc", b2: "Tuấn La" },
+      { id: 20, category: "Đôi nam nữ", a1: "Hải Hà", a2: "Minh Vượng", scoreA: "13", scoreB: "11", b1: "Vân Đình", b2: "Minh Hạnh" },
+      { id: 21, category: "Đôi nam nữ", a1: "Tiến Thọ", a2: "Quỳnh Cool", scoreA: "11", scoreB: "4", b1: "Trí Đỏ", b2: "Cẩm Ly" },
+      { id: 22, category: "Đôi nam nữ", a1: "Phú Mỗ", a2: "Minh Vượng", scoreA: "8", scoreB: "11", b1: "Dũng Ngạc", b2: "Minh Hạnh" },
+      { id: 23, category: "Đôi nam nữ", a1: "Hà Giấy", a2: "Quỳnh Cool", scoreA: "3", scoreB: "11", b1: "Lợi Trí", b2: "Cẩm Ly" },
+      { id: 24, category: "Đôi nam nữ", a1: "Điền Chèm", a2: "Hải Hà", scoreA: "5", scoreB: "11", b1: "Tuấn La", b2: "Vân Đình" }
+    ];
+
+    window.onload = function() {
+      document.addEventListener('click', closeAllDropdowns);
+      listenToFirestore();
+    };
+
+    function listenToFirestore() {
+      docRef.onSnapshot((doc) => {
+        const statusEl = document.getElementById("cloudStatus");
+        if (doc.exists) {
+          const data = doc.data();
+          vdvs = data.vdvs || [];
+          dates = data.dates || ["24/9/26"];
+          matchesData = data.matchesData || {};
+          dateKeoMode = data.dateKeoMode || {};
+          paymentStatus = data.paymentStatus || {};
+          miniGame1Content = data.miniGame1Content || miniGame1Content;
+          miniGame2Content = data.miniGame2Content || miniGame2Content;
+          
+          if (data.teamA_members) teamA_members = data.teamA_members;
+          if (data.teamB_members) teamB_members = data.teamB_members;
+
+          if (data.miniGame1Matches && data.miniGame1Matches.length === 24) {
+            miniGame1Matches = data.miniGame1Matches;
+          } else {
+            miniGame1Matches = DEFAULT_MINI1_DATA;
+          }
+
+          if (data.mini2PairsA) mini2PairsA = data.mini2PairsA;
+          if (data.mini2PairsB) mini2PairsB = data.mini2PairsB;
+          if (data.mini2MatchesA) mini2MatchesA = data.mini2MatchesA;
+          if (data.mini2MatchesB) mini2MatchesB = data.mini2MatchesB;
+          if (data.mini2Knockout) mini2Knockout = data.mini2Knockout;
+
+          if (!currentTab || (!dates.includes(currentTab) && currentTab !== "tonghop" && currentTab !== "minigame1" && currentTab !== "minigame2")) {
+            currentTab = dates[0] || "tonghop";
+          }
+          statusEl.className = "cloud-status cloud-online";
+          statusEl.innerHTML = "☁️ Firestore Online";
+        } else {
+          initDefaultFirestore();
         }
+        renderDatesMenu();
+        renderCurrentTab();
+      }, (error) => {
+        const statusEl = document.getElementById("cloudStatus");
+        statusEl.className = "cloud-status cloud-syncing";
+        statusEl.innerHTML = "⚠️ Lỗi kết nối";
+      });
+    }
 
-        function getActiveDateObj() {
-            return appState.dates.find(d => d.id === appState.activeDateId) || null;
+    function initDefaultFirestore() {
+      vdvs = ["Tiến Thọ", "Thanh Đàm", "Thành Sóc", "Hà Giấy", "Minh Vượng", "Phú Mỗ", "Điền Chèm", "Hải Hà", "Quỳnh Cool", "Trí Đỏ", "Long Diễn", "Châu Sĩ", "Minh Hạnh", "Dũng Ngạc", "Lợi Trí", "Tuấn La", "Vân Đình", "Cẩm Ly"];
+      dates = ["24/9/26"];
+      matchesData = {};
+      dates.forEach(d => {
+        matchesData[d] = [
+          { id: 1, c1_p1: "Trí Đỏ", c1_p2: "Long Diễn", c2_p1: "Tuấn La", c2_p2: "Thành Sóc", score1: "11", score2: "9", customWin: 5, customLose: -15 }
+        ];
+        dateKeoMode[d] = "default";
+      });
+
+      miniGame1Matches = DEFAULT_MINI1_DATA;
+      generateMini2Matches();
+      saveDataToFirestore();
+    }
+
+    function saveDataToFirestore() {
+      const statusEl = document.getElementById("cloudStatus");
+      statusEl.className = "cloud-status cloud-syncing";
+      statusEl.innerHTML = "⏳ Đang lưu...";
+      docRef.set({ 
+        vdvs, dates, matchesData, dateKeoMode, paymentStatus, miniGame1Content, miniGame2Content, miniGame1Matches, teamA_members, teamB_members,
+        mini2PairsA, mini2PairsB, mini2MatchesA, mini2MatchesB, mini2Knockout
+      }, { merge: true });
+    }
+
+    function goHome() {
+      if (dates.length > 0) switchTab(dates[0]);
+      else switchTab('tonghop');
+    }
+
+    function toggleMenu(menuId, e) {
+      e.stopPropagation();
+      const targetMenu = document.getElementById(menuId);
+      const isAlreadyShow = targetMenu.classList.contains("show");
+      closeAllDropdowns();
+      if (!isAlreadyShow) {
+        targetMenu.classList.add("show");
+        if (menuId === 'menuVdv') renderVDVItems(vdvs);
+      }
+    }
+
+    function closeAllDropdowns() {
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+    }
+
+    function renderDatesMenu() {
+      const container = document.getElementById("datesMenuList");
+      container.innerHTML = dates.map(d => `
+        <div class="dropdown-item ${currentTab === d ? 'txt-win' : ''}" onclick="switchTab('${d}')">
+          📅 Ngày ${d}
+        </div>
+      `).join('');
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      closeAllDropdowns();
+      renderDatesMenu();
+      renderCurrentTab();
+    }
+
+    function addVDV() {
+      const input = document.getElementById("newVdvInput");
+      const name = input.value.trim();
+      if (name && !vdvs.includes(name)) {
+        vdvs.push(name);
+        input.value = "";
+        renderVDVItems(vdvs);
+        saveDataToFirestore();
+      }
+    }
+
+    function deleteVDV(name) {
+      if (confirm(`Bạn có chắc muốn xóa VĐV ${name}?`)) {
+        vdvs = vdvs.filter(v => v !== name);
+        teamA_members = teamA_members.filter(v => v !== name);
+        teamB_members = teamB_members.filter(v => v !== name);
+        renderVDVItems(vdvs);
+        saveDataToFirestore();
+      }
+    }
+
+    function filterVDVList() {
+      const query = document.getElementById("searchVdvInput").value.toLowerCase();
+      const filtered = vdvs.filter(v => v.toLowerCase().includes(query));
+      renderVDVItems(filtered);
+    }
+
+    function renderVDVItems(list) {
+      document.getElementById("vdvCountBtn").innerText = vdvs.length;
+      const container = document.getElementById("vdvListContainer");
+      container.innerHTML = list.map(v => {
+        const vIndex = vdvs.indexOf(v);
+        const color = VDV_COLORS[vIndex % VDV_COLORS.length];
+        return `
+          <div class="vdv-item">
+            <span style="color:${color}; font-weight:bold;">${v}</span>
+            <button style="border:none; background:none; color:red; cursor:pointer; font-weight:bold;" onclick="deleteVDV('${v}')">✕</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addDateTab() {
+      closeAllDropdowns();
+      const dateStr = prompt("Nhập ngày đấu mới (VD: 25/9/26):");
+      if (dateStr && !dates.includes(dateStr)) {
+        dates.push(dateStr);
+        matchesData[dateStr] = Array.from({ length: 5 }, (_, i) => ({
+          id: i + 1, c1_p1: "", c1_p2: "", c2_p1: "", c2_p2: "", score1: "", score2: "", customWin: 5, customLose: -15
+        }));
+        dateKeoMode[dateStr] = "default";
+        currentTab = dateStr;
+        saveDataToFirestore();
+      }
+    }
+
+    function renameCurrentDate() {
+      closeAllDropdowns();
+      if (currentTab === "tonghop" || currentTab === "minigame1" || currentTab === "minigame2") return alert("⚠️ Không thể đổi tên tab này!");
+      const oldDate = currentTab;
+      const newDate = prompt(`Nhập tên mới cho ngày "${oldDate}":`, oldDate);
+      if (newDate && newDate.trim() !== "" && newDate !== oldDate) {
+        const trimmed = newDate.trim();
+        if (dates.includes(trimmed)) return alert("⚠️ Tên ngày này đã tồn tại!");
+        const idx = dates.indexOf(oldDate);
+        if (idx !== -1) dates[idx] = trimmed;
+        matchesData[trimmed] = matchesData[oldDate];
+        dateKeoMode[trimmed] = dateKeoMode[oldDate];
+        delete matchesData[oldDate];
+        delete dateKeoMode[oldDate];
+        currentTab = trimmed;
+        saveDataToFirestore();
+      }
+    }
+
+    function deleteCurrentDate() {
+      closeAllDropdowns();
+      if (currentTab === "tonghop" || currentTab === "minigame1" || currentTab === "minigame2") return alert("⚠️ Không thể xóa tab này!");
+      const dateToDelete = currentTab;
+      if (confirm(`❌ Bạn có chắc chắn muốn XÓA TOÀN BỘ dữ liệu ngày "${dateToDelete}"?`)) {
+        dates = dates.filter(d => d !== dateToDelete);
+        delete matchesData[dateToDelete];
+        delete dateKeoMode[dateToDelete];
+        currentTab = dates.length > 0 ? dates[0] : "tonghop";
+        saveDataToFirestore();
+      }
+    }
+
+    function changeKeoMode(dateStr, mode) {
+      dateKeoMode[dateStr] = mode;
+      saveDataToFirestore();
+      renderCurrentTab();
+    }
+
+    function addMatch(dateStr) {
+      if (!matchesData[dateStr]) matchesData[dateStr] = [];
+      const newId = matchesData[dateStr].length + 1;
+      matchesData[dateStr].push({
+        id: newId, c1_p1: "", c1_p2: "", c2_p1: "", c2_p2: "", score1: "", score2: "", customWin: 5, customLose: -15
+      });
+      saveDataToFirestore();
+    }
+
+    function removeLastMatch(dateStr) {
+      if (matchesData[dateStr] && matchesData[dateStr].length > 0) {
+        if (confirm(`Xóa trận đấu cuối cùng (Trận ${matchesData[dateStr].length})?`)) {
+          matchesData[dateStr].pop();
+          saveDataToFirestore();
         }
+      }
+    }
 
-        function setActiveDate(dateId) {
-            appState.activeDateId = dateId;
-            renderAll();
+    function updateMatch(dateStr, matchIndex, field, value) {
+      matchesData[dateStr][matchIndex][field] = value;
+      saveDataToFirestore();
+    }
+
+    function togglePayment(payKey) {
+      if (!isAdminVerified) {
+        const inputPass = prompt("🔑 Nhập mật khẩu Quản trị viên:");
+        if (inputPass === ADMIN_PASSCODE) {
+          isAdminVerified = true;
+        } else if (inputPass !== null) {
+          alert("❌ Mật khẩu không đúng!");
+          return;
+        } else {
+          return;
         }
+      }
+      paymentStatus[payKey] = !paymentStatus[payKey];
+      saveDataToFirestore();
+    }
 
-        function addNewDate() {
-            if (appState.role !== 'admin') return alert('Chỉ Admin mới có quyền thêm ngày!');
-            const dateStr = prompt("Nhập ngày thi đấu mới (VD: 30/09/2026):", new Date().toLocaleDateString('vi-VN'));
-            if (!dateStr) return;
+    function openGameModal(gameId) {
+      closeAllDropdowns();
+      activeGameEditing = gameId;
+      document.getElementById("gameModalTitle").innerText = `Chỉnh Sửa Mini Game ${gameId}`;
+      document.getElementById("gameContentInput").value = gameId === 1 ? miniGame1Content : miniGame2Content;
+      document.getElementById("gameModal").classList.add("show");
+    }
 
-            const newId = 'date-' + Date.now();
-            appState.dates.push({
-                id: newId,
-                dateStr: dateStr,
-                matches: [],
-                payments: {}
-            });
-            appState.activeDateId = newId;
-            renderAll();
-        }
+    function closeGameModal() {
+      document.getElementById("gameModal").classList.remove("show");
+    }
 
-        function editCurrentDate() {
-            if (appState.role !== 'admin') return alert('Chỉ Admin mới có quyền sửa ngày!');
-            const activeDate = getActiveDateObj();
-            if (!activeDate) return;
+    function saveGameContent() {
+      const val = document.getElementById("gameContentInput").value;
+      if (activeGameEditing === 1) miniGame1Content = val;
+      else miniGame2Content = val;
+      saveDataToFirestore();
+      closeGameModal();
+    }
 
-            const newStr = prompt("Sửa tên ngày thi đấu:", activeDate.dateStr);
-            if (newStr) {
-                activeDate.dateStr = newStr;
-                renderAll();
-            }
-        }
+    function renderCurrentTab() {
+      const content = document.getElementById("tabContent");
+      if (currentTab === "tonghop") {
+        renderTongHopTab(content);
+      } else if (currentTab === "minigame1") {
+        renderMiniGame1Tab(content);
+      } else if (currentTab === "minigame2") {
+        renderMiniGame2Tab(content);
+      } else {
+        renderSingleDayTab(content, currentTab);
+      }
+    }
 
-        function deleteCurrentDate() {
-            if (appState.role !== 'admin') return alert('Chỉ Admin mới có quyền xóa ngày!');
-            if (appState.dates.length <= 1) {
-                alert('Không thể xóa ngày cuối cùng!');
-                return;
-            }
-            if (confirm("Bạn có chắc chắn muốn xóa ngày thi đấu này?")) {
-                appState.dates = appState.dates.filter(d => d.id !== appState.activeDateId);
-                appState.activeDateId = appState.dates[0].id;
-                renderAll();
-            }
-        }
+    function generateVdvOptionsHtml(selectedValue) {
+      return vdvs.map((v, i) => {
+        const color = VDV_COLORS[i % VDV_COLORS.length];
+        const isSelected = selectedValue === v ? 'selected' : '';
+        return `<option value="${v}" ${isSelected} style="color: ${color}; font-weight: bold;">${v}</option>`;
+      }).join('');
+    }
 
-        function updateGlobalSettings() {
-            const minMatches = parseInt(document.getElementById('cfg-min-matches').value) || 0;
-            const btcFee = parseInt(document.getElementById('cfg-btc-fee').value) || 0;
-            appState.settings.minMatchesRequired = minMatches;
-            appState.settings.btcFeeAmount = btcFee;
-            renderFinanceTable();
-        }
+    /* -------------------------------------------------------------
+       XỬ LÝ TAB SINGLE DAY & CHẾ ĐỘ KÈO
+    ------------------------------------------------------------- */
+    function renderSingleDayTab(container, dateStr) {
+      const matches = matchesData[dateStr] || [];
+      const currentMode = dateKeoMode[dateStr] || "default";
 
-        function renderMatchesTable() {
-            const tbody = document.getElementById('match-table-body');
-            const activeDate = getActiveDateObj();
-            tbody.innerHTML = '';
+      let modeTitle = "Kèo Mặc Định (+5k / -15k)";
+      if (currentMode === "k25") modeTitle = "Kèo 25k (0k / -25k)";
+      if (currentMode === "free") modeTitle = "Kèo Tự Do (Tùy chỉnh mỗi trận)";
 
-            if (!activeDate || activeDate.matches.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-500 italic">Chưa có trận đấu nào được ghi nhận cho ngày này. Bấm "Thêm trận đấu" để bắt đầu.</td></tr>`;
-                document.getElementById('match-count-badge').innerText = '0 trận';
-                return;
-            }
+      let html = `
+        <div class="card">
+          <div class="card-header-flex">
+            <h2 class="card-title">BẢNG THỐNG KÊ TRẬN PICK - NGÀY ${dateStr}</h2>
+            <div class="table-actions-toolbar">
+              <span style="font-size:11px; font-weight:bold; color:#0f4c81;">⚙️ CHẾ ĐỘ KÈO:</span>
+              <button class="btn ${currentMode === 'default' ? 'btn-green' : ''}" onclick="changeKeoMode('${dateStr}', 'default')">Mặc định (+5k/-15k)</button>
+              <button class="btn ${currentMode === 'k25' ? 'btn-green' : ''}" onclick="changeKeoMode('${dateStr}', 'k25')">Kèo 25k (0k/-25k)</button>
+              <button class="btn ${currentMode === 'free' ? 'btn-green' : ''}" onclick="changeKeoMode('${dateStr}', 'free')">Kèo Tự Do</button>
+              <button class="btn btn-green" onclick="addMatch('${dateStr}')">➕ Thêm Trận</button>
+              <button class="btn btn-red" onclick="removeLastMatch('${dateStr}')">🗑️ Xóa Trận Cuối</button>
+            </div>
+          </div>
 
-            document.getElementById('match-count-badge').innerText = `${activeDate.matches.length} trận`;
-
-            activeDate.matches.forEach((m, idx) => {
-                const isHam = parseInt(m.scoreL) === 0 && parseInt(m.scoreW) > 0;
-                
-                // Stake calculation logic
-                let winStake = m.customStakeWin !== null ? m.customStakeWin : (isHam ? 10 : 5);
-                let lossStake = m.customStakeLoss !== null ? m.customStakeLoss : (isHam ? -30 : -15);
-                if (m.isPreset25) {
-                    winStake = 0;
-                    lossStake = -25;
-                }
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-navy-900/60 transition-colors border-b border-sheet-border/40";
-                
-                tr.innerHTML = `
-                    <td class="p-3 text-center font-bold text-amber-400">${idx + 1}</td>
-                    <td class="p-3">
-                        <div class="space-y-1">
-                            ${renderPlayerSelect(m.id, 'w1', m.w1)}
-                            ${renderPlayerSelect(m.id, 'w2', m.w2)}
-                        </div>
-                    </td>
-                    <td class="p-3">
-                        <div class="space-y-1">
-                            ${renderPlayerSelect(m.id, 'l1', m.l1)}
-                            ${renderPlayerSelect(m.id, 'l2', m.l2)}
-                        </div>
-                    </td>
-                    <td class="p-3 text-center">
-                        <div class="flex items-center justify-center gap-1">
-                            <input type="number" min="0" value="${m.scoreW}" onchange="updateMatchScore('${m.id}', 'w', this.value)" class="w-10 bg-navy-950 border border-emerald-500/50 rounded text-center font-bold text-emerald-400 py-1 focus:outline-none focus:border-emerald-400">
-                            <span class="text-gray-500 font-bold">-</span>
-                            <input type="number" min="0" value="${m.scoreL}" onchange="updateMatchScore('${m.id}', 'l', this.value)" class="w-10 bg-navy-950 border border-rose-500/50 rounded text-center font-bold text-rose-400 py-1 focus:outline-none focus:border-rose-400">
-                        </div>
-                        ${isHam ? '<span class="inline-block mt-1 text-[10px] bg-rose-950 text-rose-400 font-black px-1.5 py-0.5 rounded border border-rose-500/50 uppercase tracking-wider animate-pulse">HẦM (x2)</span>' : ''}
-                    </td>
-                    <td class="p-3 text-center">
-                        <div class="flex flex-col items-center gap-1">
-                            <div class="flex items-center gap-1 text-xs">
-                                <span class="text-emerald-400 font-bold">+${winStake}K</span>
-                                <span class="text-gray-500">/</span>
-                                <span class="text-rose-400 font-bold">${lossStake}K</span>
-                            </div>
-                            <button onclick="toggleMatchPreset25('${m.id}')" class="text-[10px] px-2 py-0.5 rounded border ${m.isPreset25 ? 'bg-amber-500 text-slate-950 font-bold border-amber-400' : 'bg-navy-950 text-gray-400 border-slate-700 hover:text-white'} transition-all">
-                                Kèo 0K/-25K
-                            </button>
-                        </div>
-                    </td>
-                    <td class="p-3 text-center">
-                        <span class="text-xs font-semibold px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Hoàn thành</span>
-                    </td>
-                    <td class="p-3 text-center">
-                        <button onclick="deleteMatch('${m.id}')" class="text-gray-500 hover:text-rose-400 p-1.5 transition-colors">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function renderPlayerSelect(matchId, roleKey, currentValue) {
-            let options = appState.players.map(p => 
-                `<option value="${p}" ${p === currentValue ? 'selected' : ''}>${p}</option>`
-            ).join('');
-            return `<select onchange="updateMatchPlayer('${matchId}', '${roleKey}', this.value)" class="w-full bg-navy-950 border border-slate-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-amber-500">
-                <option value="">-- Chọn VĐV --</option>
-                ${options}
-            </select>`;
-        }
-
-        function addNewMatch() {
-            const activeDate = getActiveDateObj();
-            if (!activeDate) return;
-            
-            const newMatch = {
-                id: 'm-' + Date.now(),
-                w1: appState.players[0] || '',
-                w2: appState.players[1] || '',
-                l1: appState.players[2] || '',
-                l2: appState.players[3] || '',
-                scoreW: 11,
-                scoreL: 5,
-                customStakeWin: null,
-                customStakeLoss: null,
-                isPreset25: false
-            };
-            activeDate.matches.push(newMatch);
-            renderAll();
-        }
-
-        function updateMatchPlayer(matchId, roleKey, val) {
-            const activeDate = getActiveDateObj();
-            if (!activeDate) return;
-            const match = activeDate.matches.find(m => m.id === matchId);
-            if (match) {
-                match[roleKey] = val;
-                renderFinanceTable();
-            }
-        }
-
-        function updateMatchScore(matchId, side, val) {
-            const activeDate = getActiveDateObj();
-            if (!activeDate) return;
-            const match = activeDate.matches.find(m => m.id === matchId);
-            if (match) {
-                if (side === 'w') match.scoreW = parseInt(val) || 0;
-                if (side === 'l') match.scoreL = parseInt(val) || 0;
-                renderMatchesTable();
-                renderFinanceTable();
-            }
-        }
-
-        function toggleMatchPreset25(matchId) {
-            const activeDate = getActiveDateObj();
-            if (!activeDate) return;
-            const match = activeDate.matches.find(m => m.id === matchId);
-            if (match) {
-                match.isPreset25 = !match.isPreset25;
-                renderMatchesTable();
-                renderFinanceTable();
-            }
-        }
-
-        function deleteMatch(matchId) {
-            const activeDate = getActiveDateObj();
-            if (!activeDate) return;
-            activeDate.matches = activeDate.matches.filter(m => m.id !== matchId);
-            renderAll();
-        }
-
-        function calculateFinanceData(activeDate) {
-            if (!activeDate) return [];
-
-            const stats = {};
-            appState.players.forEach(p => {
-                stats[p] = {
-                    name: p,
-                    totalMatches: 0,
-                    wins: 0,
-                    losses: 0,
-                    betEarnings: 0,
-                    btcFee: 0,
-                    finalTotal: 0
-                };
-            });
-
-            activeDate.matches.forEach(m => {
-                const isHam = parseInt(m.scoreL) === 0 && parseInt(m.scoreW) > 0;
-                let winAmt = m.customStakeWin !== null ? m.customStakeWin : (isHam ? 10 : 5);
-                let lossAmt = m.customStakeLoss !== null ? m.customStakeLoss : (isHam ? -30 : -15);
-
-                if (m.isPreset25) {
-                    winAmt = 0;
-                    lossAmt = -25;
-                }
-
-                // Process Winners
-                [m.w1, m.w2].forEach(p => {
-                    if (p && stats[p]) {
-                        stats[p].totalMatches += 1;
-                        stats[p].wins += 1;
-                        stats[p].betEarnings += winAmt;
-                    }
-                });
-
-                // Process Losers
-                [m.l1, m.l2].forEach(p => {
-                    if (p && stats[p]) {
-                        stats[p].totalMatches += 1;
-                        stats[p].losses += 1;
-                        stats[p].betEarnings += lossAmt;
-                    }
-                });
-            });
-
-            // Calculate BTC fee & final totals
-            const result = [];
-            Object.values(stats).forEach(p => {
-                // Only include players who played matches or exist in record
-                if (p.totalMatches > 0) {
-                    if (p.totalMatches < appState.settings.minMatchesRequired) {
-                        p.btcFee = appState.settings.btcFeeAmount;
-                    } else {
-                        p.btcFee = 0;
-                    }
-                    p.finalTotal = p.betEarnings + p.btcFee;
-                    result.push(p);
-                }
-            });
-
-            return result;
-        }
-
-        function renderFinanceTable() {
-            const activeDate = getActiveDateObj();
-            const tbody = document.getElementById('finance-table-body');
-            const tfoot = document.getElementById('finance-table-foot');
-            tbody.innerHTML = '';
-            tfoot.innerHTML = '';
-
-            const data = calculateFinanceData(activeDate);
-
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="p-6 text-center text-gray-500 italic">Chưa có dữ liệu vận động viên thi đấu.</td></tr>`;
-                return;
-            }
-
-            let sumMatches = 0, sumWins = 0, sumLosses = 0, sumKeo = 0, sumBTC = 0, sumFinal = 0;
-
-            data.forEach((row, idx) => {
-                sumMatches += row.totalMatches;
-                sumWins += row.wins;
-                sumLosses += row.losses;
-                sumKeo += row.betEarnings;
-                sumBTC += row.btcFee;
-                sumFinal += row.finalTotal;
-
-                const paymentInfo = (activeDate.payments && activeDate.payments[row.name]) || { isPaid: false, note: '' };
-                const isAdmin = appState.role === 'admin';
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-navy-900/60 transition-colors border-b border-sheet-border/40";
-
-                tr.innerHTML = `
-                    <td class="p-3 text-center font-bold text-gray-400">${idx + 1}</td>
-                    <td class="p-3 font-semibold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-user text-xs text-amber-500"></i>
-                        <span>${row.name}</span>
-                    </td>
-                    <td class="p-3 text-center font-semibold text-gray-300">${row.totalMatches}</td>
-                    <td class="p-3 text-center text-emerald-400 font-bold">${row.wins}</td>
-                    <td class="p-3 text-center text-rose-400 font-bold">${row.losses}</td>
-                    <td class="p-3 text-right font-bold ${row.betEarnings >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
-                        ${row.betEarnings > 0 ? '+' : ''}${row.betEarnings}K
-                    </td>
-                    <td class="p-3 text-right font-bold text-rose-400">
-                        ${row.btcFee !== 0 ? row.btcFee + 'K' : '0K'}
-                    </td>
-                    <td class="p-3 text-right font-black text-sm ${row.finalTotal >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
-                        ${row.finalTotal > 0 ? '+' : ''}${row.finalTotal}K
-                    </td>
-                    <td class="p-3 text-center">
-                        <input type="checkbox" ${paymentInfo.isPaid ? 'checked' : ''} ${!isAdmin ? 'disabled' : ''} 
-                            onchange="updatePaymentStatus('${row.name}', 'isPaid', this.checked)"
-                            class="w-4 h-4 rounded text-amber-500 bg-navy-950 border-slate-700 focus:ring-amber-500 cursor-pointer disabled:cursor-not-allowed">
-                    </td>
-                    <td class="p-3">
-                        <input type="text" value="${paymentInfo.note || ''}" ${!isAdmin ? 'disabled' : ''} 
-                            placeholder="${isAdmin ? 'Ghi chú...' : ''}"
-                            onchange="updatePaymentStatus('${row.name}', 'note', this.value)"
-                            class="w-full bg-navy-950 border border-slate-800 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-amber-500 disabled:bg-transparent disabled:border-none">
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            // Footer Total Row
-            tfoot.innerHTML = `
+          <div class="table-responsive">
+            <table>
+              <thead>
                 <tr>
-                    <td colspan="2" class="p-3 text-center uppercase tracking-wider text-amber-400">TỔNG CỘNG</td>
-                    <td class="p-3 text-center text-white">${sumMatches}</td>
-                    <td class="p-3 text-center text-emerald-400">${sumWins}</td>
-                    <td class="p-3 text-center text-rose-400">${sumLosses}</td>
-                    <td class="p-3 text-right ${sumKeo >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${sumKeo > 0 ? '+' : ''}${sumKeo}K</td>
-                    <td class="p-3 text-right text-rose-400">${sumBTC}K</td>
-                    <td class="p-3 text-right text-sm ${sumFinal >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${sumFinal > 0 ? '+' : ''}${sumFinal}K</td>
-                    <td colspan="2" class="p-3 text-center text-xs text-gray-400 font-normal">Đã cân bằng thu/chi</td>
+                  <th style="width: 50px;">STT</th>
+                  <th colspan="2" class="th-pick1">CẶP PICK 1</th>
+                  <th colspan="2" class="th-pick2">CẶP PICK 2</th>
+                  <th style="width: 88px;">TỶ SỐ</th>
+                  ${currentMode !== 'default' ? '<th style="width: 120px;" class="th-money">MỆNH GIÁ (Thắng/Thua)</th>' : ''}
+                  <th colspan="2" class="th-money">KÈO BAN ĐẦU</th>
                 </tr>
-            `;
+              </thead>
+              <tbody>
+      `;
+
+      matches.forEach((m, idx) => {
+        const val1 = (m.score1 || "").toString().trim();
+        const val2 = (m.score2 || "").toString().trim();
+
+        const s1 = parseInt(val1);
+        const s2 = parseInt(val2);
+        
+        let keo1 = "";
+        let keo2 = "";
+
+        let winAmt = 5;
+        let loseAmt = -15;
+
+        if (currentMode === "k25") {
+          winAmt = 0;
+          loseAmt = -25;
+        } else if (currentMode === "free") {
+          winAmt = m.customWin !== undefined ? parseInt(m.customWin) : 5;
+          loseAmt = m.customLose !== undefined ? parseInt(m.customLose) : -15;
         }
 
-        function updatePaymentStatus(playerName, key, value) {
-            const activeDate = getActiveDateObj();
-            if (!activeDate) return;
-            if (!activeDate.payments) activeDate.payments = {};
-            if (!activeDate.payments[playerName]) activeDate.payments[playerName] = { isPaid: false, note: '' };
+        if (!isNaN(s1) && !isNaN(s2)) {
+          let isHam = (s1 === 0 || s2 === 0);
+          let effectiveWin = isHam ? (winAmt > 0 ? winAmt * 2 : 0) : winAmt;
+          let effectiveLose = isHam ? loseAmt * 2 : loseAmt;
 
-            activeDate.payments[playerName][key] = value;
+          if (s1 > s2) { keo1 = effectiveWin; keo2 = effectiveLose; } 
+          else if (s2 > s1) { keo1 = effectiveLose; keo2 = effectiveWin; } 
+          else { keo1 = 0; keo2 = 0; }
         }
 
-        function toggleSummaryMatrixModal(show) {
-            const modal = document.getElementById('summary-modal');
-            if (show) {
-                renderSummaryMatrix();
-                modal.classList.remove('hidden');
-            } else {
-                modal.classList.add('hidden');
+        const isScore1Zero = (val1 === "0" || s1 === 0);
+        const isScore2Zero = (val2 === "0" || s2 === 0);
+
+        const score1Inner = isScore1Zero 
+          ? `<span class="ham-text">HẦM</span>` 
+          : `<input type="text" class="score-input" value="${m.score1}" onchange="updateMatch('${dateStr}', ${idx}, 'score1', this.value)">`;
+
+        const score2Inner = isScore2Zero 
+          ? `<span class="ham-text">HẦM</span>` 
+          : `<input type="text" class="score-input" value="${m.score2}" onchange="updateMatch('${dateStr}', ${idx}, 'score2', this.value)">`;
+
+        const c1_p1_color = m.c1_p1 ? VDV_COLORS[vdvs.indexOf(m.c1_p1) % VDV_COLORS.length] : "#334155";
+        const c1_p2_color = m.c1_p2 ? VDV_COLORS[vdvs.indexOf(m.c1_p2) % VDV_COLORS.length] : "#334155";
+        const c2_p1_color = m.c2_p1 ? VDV_COLORS[vdvs.indexOf(m.c2_p1) % VDV_COLORS.length] : "#334155";
+        const c2_p2_color = m.c2_p2 ? VDV_COLORS[vdvs.indexOf(m.c2_p2) % VDV_COLORS.length] : "#334155";
+
+        let customKeoInputHtml = "";
+        if (currentMode !== 'default') {
+          customKeoInputHtml = `
+            <td>
+              <div style="display:flex; gap:2px; justify-content:center;">
+                <input type="number" placeholder="Thắng" style="width:48px;" value="${m.customWin !== undefined ? m.customWin : winAmt}" onchange="updateMatch('${dateStr}', ${idx}, 'customWin', parseInt(this.value))">
+                <input type="number" placeholder="Thua" style="width:48px;" value="${m.customLose !== undefined ? m.customLose : loseAmt}" onchange="updateMatch('${dateStr}', ${idx}, 'customLose', parseInt(this.value))">
+              </div>
+            </td>
+          `;
+        }
+
+        html += `
+          <tr>
+            <td><strong>Trận ${m.id}</strong></td>
+            <td>
+              <select style="color: ${c1_p1_color};" onchange="updateMatch('${dateStr}', ${idx}, 'c1_p1', this.value)">
+                <option value="">-- Select --</option>
+                ${generateVdvOptionsHtml(m.c1_p1)}
+              </select>
+            </td>
+            <td>
+              <select style="color: ${c1_p2_color};" onchange="updateMatch('${dateStr}', ${idx}, 'c1_p2', this.value)">
+                <option value="">-- Select --</option>
+                ${generateVdvOptionsHtml(m.c1_p2)}
+              </select>
+            </td>
+            <td>
+              <select style="color: ${c2_p1_color};" onchange="updateMatch('${dateStr}', ${idx}, 'c2_p1', this.value)">
+                <option value="">-- Select --</option>
+                ${generateVdvOptionsHtml(m.c2_p1)}
+              </select>
+            </td>
+            <td>
+              <select style="color: ${c2_p2_color};" onchange="updateMatch('${dateStr}', ${idx}, 'c2_p2', this.value)">
+                <option value="">-- Select --</option>
+                ${generateVdvOptionsHtml(m.c2_p2)}
+              </select>
+            </td>
+            <td>
+              <div style="display:flex; align-items:center; justify-content:center; gap:2px;">
+                <div class="score-input" onclick="if(${isScore1Zero}) updateMatch('${dateStr}', ${idx}, 'score1', '')">${score1Inner}</div>
+                <span style="font-weight:bold;">-</span>
+                <div class="score-input" onclick="if(${isScore2Zero}) updateMatch('${dateStr}', ${idx}, 'score2', '')">${score2Inner}</div>
+              </div>
+            </td>
+            ${customKeoInputHtml}
+            <td class="${keo1 > 0 ? 'txt-win' : (keo1 < 0 ? 'txt-lose' : '')}">${keo1}</td>
+            <td class="${keo2 > 0 ? 'txt-win' : (keo2 < 0 ? 'txt-lose' : '')}">${keo2}</td>
+          </tr>
+        `;
+      });
+
+      html += `
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+      renderSingleDaySummaryTable(dateStr, html, container);
+    }
+
+    function renderSingleDaySummaryTable(dateStr, matchesHtml, container) {
+      const matches = matchesData[dateStr] || [];
+      const currentMode = dateKeoMode[dateStr] || "default";
+      let stats = {};
+
+      vdvs.forEach(v => {
+        stats[v] = { played: 0, winK: 0, loseK: 0, total: 0 };
+      });
+
+      matches.forEach(m => {
+        const s1 = parseInt(m.score1);
+        const s2 = parseInt(m.score2);
+
+        let winAmt = 5;
+        let loseAmt = -15;
+
+        if (currentMode === "k25") { winAmt = 0; loseAmt = -25; } 
+        else if (currentMode === "free") {
+          winAmt = m.customWin !== undefined ? parseInt(m.customWin) : 5;
+          loseAmt = m.customLose !== undefined ? parseInt(m.customLose) : -15;
+        }
+
+        if (!isNaN(s1) && !isNaN(s2)) {
+          const pair1 = [m.c1_p1, m.c1_p2].filter(Boolean);
+          const pair2 = [m.c2_p1, m.c2_p2].filter(Boolean);
+
+          let isHam = (s1 === 0 || s2 === 0);
+          let effectiveWin = isHam ? (winAmt > 0 ? winAmt * 2 : 0) : winAmt;
+          let effectiveLose = isHam ? loseAmt * 2 : loseAmt;
+
+          if (s1 > s2) {
+            pair1.forEach(v => { if (stats[v]) { stats[v].played++; stats[v].winK += effectiveWin; stats[v].total += effectiveWin; } });
+            pair2.forEach(v => { if (stats[v]) { stats[v].played++; stats[v].loseK += effectiveLose; stats[v].total += effectiveLose; } });
+          } else if (s2 > s1) {
+            pair2.forEach(v => { if (stats[v]) { stats[v].played++; stats[v].winK += effectiveWin; stats[v].total += effectiveWin; } });
+            pair1.forEach(v => { if (stats[v]) { stats[v].played++; stats[v].loseK += effectiveLose; stats[v].total += effectiveLose; } });
+          }
+        }
+      });
+
+      let sumBringBack = 0, sumThucThu = 0, sumAmThucTe = 0;
+      let summaryRowsHtml = "";
+
+      vdvs.forEach((v) => {
+        const st = stats[v];
+        if (st.played > 0) {
+          const payKey = `${dateStr}_${v}`;
+          const isPaid = paymentStatus[payKey] || false;
+          const vIndex = vdvs.indexOf(v);
+          const vColor = VDV_COLORS[vIndex % VDV_COLORS.length];
+
+          let bringBack = 0;
+          if (st.played >= 4 && st.total > 0) { bringBack = st.total; sumBringBack += bringBack; }
+          if (st.total < 0) { sumAmThucTe += st.total; if (isPaid) sumThucThu += Math.abs(st.total); }
+
+          let noteText = "";
+          if (st.total < 0) {
+            noteText = isPaid ? `<span class="note-paid">Đã nộp</span>` : `<span class="note-unpaid">Chưa nộp</span>`;
+          } else if (st.total > 0) {
+            noteText = isPaid ? `<span class="note-paid">Đã nhận</span>` : `<span class="note-unpaid">Chưa nhận</span>`;
+          }
+
+          summaryRowsHtml += `
+            <tr>
+              <td style="color: ${vColor}; font-weight: 800; text-align: left; padding-left: 8px;">${v}</td>
+              <td>${st.played}</td>
+              <td class="txt-win">${st.winK > 0 ? st.winK : ''}</td>
+              <td class="txt-lose">${st.loseK < 0 ? st.loseK : ''}</td>
+              <td style="color:#2563eb; font-weight:bold;">${bringBack > 0 ? bringBack : ''}</td>
+              <td class="${st.total < 0 ? 'txt-lose' : (st.total > 0 ? 'txt-win' : '')}"><strong>${st.total}</strong></td>
+              <td><input type="checkbox" class="checkbox-cell" ${isPaid ? 'checked' : ''} onclick="togglePayment('${payKey}')"></td>
+              <td>${noteText}</td>
+            </tr>
+          `;
+        }
+      });
+
+      let btcThuVeCalculated = sumAmThucTe + sumBringBack; 
+      let quyCon = sumThucThu - Math.abs(btcThuVeCalculated);
+
+      let summaryTableHtml = `
+        <div class="card">
+          <div class="card-header-flex">
+            <h2 class="card-title">BẢNG TỔNG HỢP THÀNH TIỀN & THU CHI</h2>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>PICK THỦ</th>
+                  <th>SỐ TRẬN</th>
+                  <th>THẮNG/K</th>
+                  <th>THUA/K</th>
+                  <th>MANG VỀ</th>
+                  <th>TỔNG</th>
+                  <th>THỰC TẾ</th>
+                  <th>NOTE</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${summaryRowsHtml}
+                <tr class="total-summary-row">
+                  <td style="color: red; text-align: left;"><strong>Tổng Tiền BTC Thu Về</strong></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td style="color: blue;"><strong>${sumBringBack}</strong></td>
+                  <td style="color: red;"><strong>${btcThuVeCalculated}</strong></td>
+                  <td style="color: blue;"><strong>${sumThucThu}</strong></td>
+                  <td></td>
+                </tr>
+                <tr class="total-summary-row">
+                  <td style="color: red; text-align: left;" colspan="4"><strong>Quỹ Còn</strong></td>
+                  <td colspan="2" style="color: red; font-size: 13px;"><strong>${quyCon}</strong></td>
+                  <td colspan="2"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = matchesHtml + summaryTableHtml;
+    }
+
+    /* -------------------------------------------------------------
+       BẢNG TỔNG HỢP CÁC NGÀY
+    ------------------------------------------------------------- */
+    function renderTongHopTab(container) {
+      let vdvDayTotals = {};
+      let vdvRowKeoSum = {};
+      
+      vdvs.forEach(v => {
+        vdvDayTotals[v] = {};
+        vdvRowKeoSum[v] = 0;
+        dates.forEach(d => { vdvDayTotals[v][d] = 0; });
+      });
+
+      let dayTotalsSum = {};
+      dates.forEach(d => { dayTotalsSum[d] = 0; });
+
+      dates.forEach(d => {
+        const matches = matchesData[d] || [];
+        const currentMode = dateKeoMode[d] || "default";
+
+        let statsDay = {};
+        vdvs.forEach(v => { statsDay[v] = { played: 0, total: 0 }; });
+
+        matches.forEach(m => {
+          const s1 = parseInt(m.score1);
+          const s2 = parseInt(m.score2);
+
+          let winAmt = 5;
+          let loseAmt = -15;
+
+          if (currentMode === "k25") { winAmt = 0; loseAmt = -25; } 
+          else if (currentMode === "free") {
+            winAmt = m.customWin !== undefined ? parseInt(m.customWin) : 5;
+            loseAmt = m.customLose !== undefined ? parseInt(m.customLose) : -15;
+          }
+
+          if (!isNaN(s1) && !isNaN(s2)) {
+            const pair1 = [m.c1_p1, m.c1_p2].filter(Boolean);
+            const pair2 = [m.c2_p1, m.c2_p2].filter(Boolean);
+
+            let isHam = (s1 === 0 || s2 === 0);
+            let effectiveWin = isHam ? (winAmt > 0 ? winAmt * 2 : 0) : winAmt;
+            let effectiveLose = isHam ? loseAmt * 2 : loseAmt;
+
+            if (s1 > s2) {
+              pair1.forEach(v => { if (statsDay[v]) { statsDay[v].played++; statsDay[v].total += effectiveWin; } });
+              pair2.forEach(v => { if (statsDay[v]) { statsDay[v].played++; statsDay[v].total += effectiveLose; } });
+            } else if (s2 > s1) {
+              pair2.forEach(v => { if (statsDay[v]) { statsDay[v].played++; statsDay[v].total += effectiveWin; } });
+              pair1.forEach(v => { if (statsDay[v]) { statsDay[v].played++; statsDay[v].total += effectiveLose; } });
             }
-        }
+          }
+        });
 
-        function renderSummaryMatrix() {
-            const thead = document.getElementById('summary-matrix-head');
-            const tbody = document.getElementById('summary-matrix-body');
-            thead.innerHTML = '';
-            tbody.innerHTML = '';
+        let sumAmDay = 0;
+        let sumBringBackDay = 0;
 
-            // Header row: Player Name | Date 1 | Date 2 | ... | Total Net
-            let headHTML = `
-                <tr class="bg-sheet-header text-gray-300 uppercase border-b border-sheet-border">
-                    <th class="p-3 text-left min-w-[150px]">Vận Động Viên</th>
-            `;
-            appState.dates.forEach(d => {
-                headHTML += `<th class="p-3 text-center min-w-[100px]">${d.dateStr}</th>`;
-            });
-            headHTML += `<th class="p-3 text-right min-w-[120px] bg-navy-900">TỔNG THỰC TẾ</th></tr>`;
-            thead.innerHTML = headHTML;
+        vdvs.forEach(v => {
+          let st = statsDay[v];
+          if (st.played > 0) {
+            vdvDayTotals[v][d] = st.total;
+            vdvRowKeoSum[v] += st.total;
 
-            // Player Net Summary Map
-            appState.players.forEach(p => {
-                let rowHTML = `<tr class="hover:bg-navy-900/50 border-b border-sheet-border/40">
-                    <td class="p-3 font-semibold text-white">${p}</td>`;
-                let totalNet = 0;
-
-                appState.dates.forEach(d => {
-                    const dayData = calculateFinanceData(d);
-                    const pStat = dayData.find(x => x.name === p);
-                    const val = pStat ? pStat.finalTotal : 0;
-                    totalNet += val;
-
-                    rowHTML += `<td class="p-3 text-center font-bold ${val > 0 ? 'text-emerald-400' : val < 0 ? 'text-rose-400' : 'text-gray-500'}">
-                        ${val !== 0 ? (val > 0 ? '+' + val : val) + 'K' : '-'}
-                    </td>`;
-                });
-
-                rowHTML += `<td class="p-3 text-right font-black bg-navy-900 ${totalNet > 0 ? 'text-emerald-400' : totalNet < 0 ? 'text-rose-400' : 'text-gray-300'}">
-                    ${totalNet > 0 ? '+' : ''}${totalNet}K
-                </td></tr>`;
-
-                tbody.innerHTML += rowHTML;
-            });
-        }
-
-        function toggleVDVModal(show) {
-            const modal = document.getElementById('vdv-modal');
-            if (show) {
-                renderVDVList();
-                modal.classList.remove('hidden');
-            } else {
-                modal.classList.add('hidden');
+            if (st.total < 0) {
+              sumAmDay += st.total;
+            } else if (st.played >= 4 && st.total > 0) {
+              sumBringBackDay += st.total;
             }
-        }
+          }
+        });
 
-        function renderVDVList() {
-            const tbody = document.getElementById('vdv-list-body');
-            tbody.innerHTML = '';
+        dayTotalsSum[d] = sumAmDay - sumBringBackDay;
+      });
 
-            appState.players.forEach((p, idx) => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-navy-900/50";
-                tr.innerHTML = `
-                    <td class="p-2.5 text-center text-gray-400">${idx + 1}</td>
-                    <td class="p-2.5 font-medium text-white">${p}</td>
-                    <td class="p-2.5 text-center">
-                        <button onclick="deleteVDV('${p}')" class="text-rose-400 hover:text-rose-300 px-2 py-1 text-xs">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+      let grandTotalAllDays = 0;
 
-        function addVDV() {
-            if (appState.role !== 'admin') return alert('Chỉ Admin mới có quyền sửa VĐV!');
-            const input = document.getElementById('new-vdv-name');
-            const name = input.value.trim();
-            if (!name) return;
-            if (appState.players.includes(name)) {
-                alert('Tên VĐV này đã tồn tại!');
-                return;
-            }
+      let html = `
+        <div class="card">
+          <div class="card-header-flex">
+            <h2 class="card-title">BẢNG TỔNG HỢP CÁC NGÀY</h2>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 140px;">VĐV (PICK THỦ)</th>
+                  ${dates.map(d => `<th>NGÀY ${d}</th>`).join('')}
+                  <th style="background-color: #fef08a; color: #854d0e;">TỔNG KÈO</th>
+                </tr>
+              </thead>
+              <tbody>
+      `;
 
-            appState.players.push(name);
-            input.value = '';
-            renderVDVList();
-            renderAll();
-        }
+      vdvs.forEach((v, index) => {
+        let dayCells = dates.map(d => {
+          let val = vdvDayTotals[v][d];
+          let cls = val > 0 ? 'txt-win' : (val < 0 ? 'txt-lose' : '');
+          return `<td class="${cls}">${val !== 0 ? (val > 0 ? '+' + val + 'K' : val + 'K') : '-'}</td>`;
+        }).join('');
 
-        function deleteVDV(name) {
-            if (appState.role !== 'admin') return alert('Chỉ Admin mới có quyền xóa VĐV!');
-            if (confirm(`Bạn có chắc muốn xóa VĐV "${name}"?`)) {
-                appState.players = appState.players.filter(p => p !== name);
-                renderVDVList();
-                renderAll();
-            }
-        }
+        let rowSum = vdvRowKeoSum[v];
+        let totalCls = rowSum > 0 ? 'txt-win' : (rowSum < 0 ? 'txt-lose' : '');
+        let vdvColor = VDV_COLORS[index % VDV_COLORS.length];
 
-        function exportToExcel() {
-            const activeDate = getActiveDateObj();
-            if (!activeDate) return;
+        html += `
+          <tr>
+            <td style="color: ${vdvColor}; font-weight: 800; font-size: 11px; text-align: left; padding-left: 8px;">${v}</td>
+            ${dayCells}
+            <td class="${totalCls}" style="background-color: #fef9c3;"><strong>${rowSum !== 0 ? (rowSum > 0 ? '+' + rowSum + 'K' : rowSum + 'K') : '0K'}</strong></td>
+          </tr>
+        `;
+      });
 
-            const financeData = calculateFinanceData(activeDate);
+      let daySumCells = dates.map(d => {
+        let val = dayTotalsSum[d];
+        grandTotalAllDays += val;
+        let cls = val < 0 ? 'txt-lose' : (val > 0 ? 'txt-win' : '');
+        return `<td class="${cls}"><strong>${val !== 0 ? val + 'K' : '0K'}</strong></td>`;
+      }).join('');
 
-            // Build Sheet Data
-            const sheetData = [
-                ["BẢNG TỔNG HỢP KÈO 15K - PICKLEBALL"],
-                ["Ngày thi đấu:", activeDate.dateStr],
-                [""],
-                ["BẢNG THỐNG KÊ THÀNH TIỀN THỰC TẾ"],
-                ["STT", "Tên VĐV", "Số Trận", "Thắng", "Thua", "Tổng Kèo (K)", "Tiền BTC (K)", "Thành Tiền (K)", "Trạng Thái Thanh Toán"]
-            ];
+      let grandTotalCls = grandTotalAllDays < 0 ? 'txt-lose' : (grandTotalAllDays > 0 ? 'txt-win' : '');
 
-            financeData.forEach((r, idx) => {
-                const payment = (activeDate.payments && activeDate.payments[r.name]) || { isPaid: false };
-                sheetData.push([
-                    idx + 1,
-                    r.name,
-                    r.totalMatches,
-                    r.wins,
-                    r.losses,
-                    r.betEarnings,
-                    r.btcFee,
-                    r.finalTotal,
-                    payment.isPaid ? 'Đã Thanh Toán' : 'Chưa Thanh Toán'
-                ]);
-            });
+      html += `
+                <tr class="total-summary-row">
+                  <td style="color: red; text-align: center;"><strong>TỔNG NGÀY</strong></td>
+                  ${daySumCells}
+                  <td class="${grandTotalCls}" style="background-color: #fef08a;"><strong>${grandTotalAllDays !== 0 ? grandTotalAllDays + 'K' : '0K'}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
 
-            sheetData.push([""]);
-            sheetData.push(["DANH SÁCH TRẬN ĐẤU"]);
-            sheetData.push(["STT", "Đội Thắng 1", "Đội Thắng 2", "Đội Thua 1", "Đội Thua 2", "Tỷ Số Thắng", "Tỷ Số Thua"]);
+      container.innerHTML = html;
+    }
 
-            activeDate.matches.forEach((m, idx) => {
-                sheetData.push([
-                    idx + 1,
-                    m.w1,
-                    m.w2,
-                    m.l1,
-                    m.l2,
-                    m.scoreW,
-                    m.scoreL
-                ]);
-            });
+    /* -------------------------------------------------------------
+       MINI GAME 1 (TEAM A VS TEAM B - 24 TRẬN)
+    ------------------------------------------------------------- */
+    function renderMiniGame1Tab(container) {
+      let maxLen = Math.max(teamA_members.length, teamB_members.length);
+      let teamAssignmentRowsHtml = "";
 
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet(sheetData);
-            XLSX.utils.book_append_sheet(wb, ws, "KeoPickleball");
+      for (let i = 0; i < maxLen; i++) {
+        let valA = teamA_members[i] || "";
+        let valB = teamB_members[i] || "";
 
-            XLSX.writeFile(wb, `Keo_Pickleball_${activeDate.dateStr.replace(/\//g, '-')}.xlsx`);
-        }
+        teamAssignmentRowsHtml += `
+          <tr>
+            <td><strong>${i + 1}</strong></td>
+            <td>
+              <div style="display:flex; gap:2px; align-items:center;">
+                <input type="text" value="${valA}" onchange="updateTeamMember('A', ${i}, this.value)" placeholder="Tên VĐV Team A">
+                ${valA ? `<button class="btn btn-red btn-sm" onclick="removeTeamMember('A', ${i})">✕</button>` : ''}
+              </div>
+            </td>
+            <td>
+              <div style="display:flex; gap:2px; align-items:center;">
+                <input type="text" value="${valB}" onchange="updateTeamMember('B', ${i}, this.value)" placeholder="Tên VĐV Team B">
+                ${valB ? `<button class="btn btn-red btn-sm" onclick="removeTeamMember('B', ${i})">✕</button>` : ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      }
 
-        function renderDateBadges() {
-            const container = document.getElementById('date-badges-container');
-            container.innerHTML = '';
+      let html = `
+        <div class="card">
+          <div class="card-header-flex">
+            <h2 class="card-title">👥 DANH SÁCH CHIA TEAM A & TEAM B (MINI GAME 1)</h2>
+            <div class="table-actions-toolbar">
+              <button class="btn btn-green btn-sm" onclick="addNewMemberToTeam('A')">➕ Thêm VĐV Team A</button>
+              <button class="btn btn-green btn-sm" onclick="addNewMemberToTeam('B')">➕ Thêm VĐV Team B</button>
+            </div>
+          </div>
+          <div class="table-responsive" style="max-width: 650px; margin: 0 auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="background:#0f4c81; color:#ffffff !important;">STT</th>
+                  <th class="th-team-a" style="color:#ffffff !important;">TEAM A</th>
+                  <th class="th-team-b" style="color:#ffffff !important;">TEAM B</th>
+                </tr>
+              </thead>
+              <tbody>${teamAssignmentRowsHtml}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
 
-            appState.dates.forEach(d => {
-                const isActive = d.id === appState.activeDateId;
-                const btn = document.createElement('button');
-                btn.onclick = () => setActiveDate(d.id);
-                btn.className = `px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
-                    isActive 
-                        ? 'bg-amber-500 text-slate-950 shadow-md font-bold' 
-                        : 'bg-navy-900 text-gray-300 border border-sheet-border hover:bg-slate-800'
-                }`;
-                btn.innerHTML = `<i class="fa-solid fa-calendar-day"></i> ${d.dateStr}`;
-                container.appendChild(btn);
-            });
-        }
+      container.innerHTML = html;
+    }
 
-        function renderAll() {
-            renderDateBadges();
-            renderMatchesTable();
-            renderFinanceTable();
-        }
-    </script>
+    function updateTeamMember(team, index, val) {
+      if (team === 'A') teamA_members[index] = val;
+      else teamB_members[index] = val;
+      saveDataToFirestore();
+    }
+    function addNewMemberToTeam(team) {
+      if (team === 'A') teamA_members.push("VĐV A Mới");
+      else teamB_members.push("VĐV B Mới");
+      saveDataToFirestore();
+      renderCurrentTab();
+    }
+    function removeTeamMember(team, index) {
+      if (team === 'A') teamA_members.splice(index, 1);
+      else teamB_members.splice(index, 1);
+      saveDataToFirestore();
+      renderCurrentTab();
+    }
+
+    function exportToExcel() {
+      closeAllDropdowns();
+      const wb = XLSX.utils.book_new();
+      dates.forEach(d => {
+        const matches = matchesData[d] || [];
+        const data = matches.map(m => ({
+          "Trận": m.id,
+          "Cặp Pick 1 - VĐV 1": m.c1_p1,
+          "Cặp Pick 1 - VĐV 2": m.c1_p2,
+          "Cặp Pick 2 - VĐV 1": m.c2_p1,
+          "Cặp Pick 2 - VĐV 2": m.c2_p2,
+          "Tỷ số 1": m.score1,
+          "Tỷ số 2": m.score2
+        }));
+        const ws = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, `Ngay_${d.replace(/\//g, '-')}`);
+      });
+      XLSX.writeFile(wb, "Pickleball_CMTD_ThongKe.xlsx");
+    }
+  </script>
 </body>
 </html>
