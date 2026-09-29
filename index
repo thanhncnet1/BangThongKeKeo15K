@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Lý & Thống Kê Giải Đấu Pickleball</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              900: '#0b192c', // Deep Dark Blue
+              800: '#1e3e62', // Dark Blue Primary
+              700: '#000000', // Accent dark
+              600: '#2563eb', // Vivid Blue Accent
+              500: '#3b82f6',
+              100: '#e0e7ff',
+              50: '#f0f3ff'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #08101d;
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0b192c;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #1e3e62;
+      border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #3b82f6;
+    }
+    input, select {
+      background-color: #0b192c !important;
+      color: #ffffff !important;
+      border-color: #1e3e62 !important;
+    }
+    input:focus, select:focus {
+      border-color: #3b82f6 !important;
+      outline: none !important;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-2 sm:p-4 md:p-6 custom-scrollbar">
+
+  <!-- HEADER -->
+  <header class="max-w-7xl mx-auto mb-6 bg-gradient-to-r from-brand-900 via-brand-800 to-brand-900 border border-brand-800 rounded-2xl p-4 sm:p-6 shadow-2xl flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white text-2xl shadow-lg shadow-blue-500/30">
+        <i class="fa-solid fa-[#000] fa-table-tennis-paddle-ball"></i>
+      </div>
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+          PICKLEBALL <span class="text-blue-400 text-sm font-semibold uppercase px-2 py-0.5 rounded bg-blue-950 border border-blue-800">Tournament Pro</span>
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-400">Quản lý trận đấu, thống kê & tính tiền kèo tự động</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-2 bg-brand-900/80 p-1.5 rounded-xl border border-brand-800 text-xs sm:text-sm w-full md:w-auto justify-around">
+      <div class="px-3 py-1.5 text-center">
+        <span class="block text-slate-400 text-[10px] uppercase font-bold">Tổng số trận</span>
+        <span id="total-matches-badge" class="font-extrabold text-blue-400 text-lg">0</span>
+      </div>
+      <div class="h-8 w-[1px] bg-brand-800"></div>
+      <div class="px-3 py-1.5 text-center">
+        <span class="block text-slate-400 text-[10px] uppercase font-bold">VĐV / Khách</span>
+        <span id="total-players-badge" class="font-extrabold text-emerald-400 text-lg">0</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- TOP CONTROL & SETTINGS BAR (4 Cols on Desktop / Top section) -->
+    <div class="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <!-- DANH SÁCH VĐV PANEL -->
+      <div class="bg-brand-900 border border-brand-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-users text-blue-400"></i> Quản Lý Danh Sách VĐV
+            </h2>
+            <span class="text-xs bg-blue-900/50 text-blue-300 px-2 py-0.5 rounded-full border border-blue-700/50" id="player-count">0 người</span>
+          </div>
+
+          <!-- Tìm kiếm & Thêm -->
+          <div class="space-y-2 mb-3">
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+              <input type="text" id="search-player-input" oninput="renderPlayerList()" placeholder="Tìm tên VĐV..." class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border">
+            </div>
+            <div class="flex gap-2">
+              <input type="text" id="new-player-name" placeholder="Tên VĐV mới / Khách..." class="flex-1 px-3 py-1.5 text-xs rounded-lg border">
+              <button onclick="addPlayer()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1 shadow-md">
+                <i class="fa-solid fa-plus"></i> Thêm
+              </button>
+            </div>
+          </div>
+
+          <!-- Danh sách VĐV List -->
+          <div id="player-list-container" class="max-h-36 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+            <!-- Dynamic Player items -->
+          </div>
+        </div>
+      </div>
+
+      <!-- BỘ THÔNG SỐ CÀI ĐẶT PANEL -->
+      <div class="bg-brand-900 border border-brand-800 rounded-2xl p-4 shadow-xl md:col-span-2">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-blue-400"></i> Cấu Hình Cài Đặt Kèo & Quy Tắc
+          </h2>
+          <span class="text-xs text-slate-400">(Tự động tính toán lại toàn bộ)</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div>
+            <label class="block text-slate-400 mb-1">Kèo thắng/trận (K):</label>
+            <input type="number" id="setting-win-rate" value="5" onchange="recalculateAll()" class="w-full px-2 py-1.5 rounded-lg border font-semibold text-emerald-400">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Kèo thua/trận (K):</label>
+            <input type="number" id="setting-lose-rate" value="-15" onchange="recalculateAll()" class="w-full px-2 py-1.5 rounded-lg border font-semibold text-rose-400">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Số trận tối thiểu:</label>
+            <input type="number" id="setting-min-matches" value="4" min="0" onchange="recalculateAll()" class="w-full px-2 py-1.5 rounded-lg border font-semibold text-amber-400">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Đá ví BTC/người (K):</label>
+            <input type="number" id="setting-btc-fee" value="-10" onchange="recalculateAll()" class="w-full px-2 py-1.5 rounded-lg border font-semibold text-purple-400">
+          </div>
+        </div>
+
+        <!-- THỐNG KÊ TÀI CHÍNH TỔNG QUAN -->
+        <div class="mt-4 pt-3 border-t border-brand-800 grid grid-cols-3 gap-2 text-center">
+          <div class="bg-brand-800/40 p-2 rounded-xl border border-brand-800/60">
+            <span class="block text-[10px] text-slate-400 uppercase">BTC Thu Về (Đã nộp)</span>
+            <span id="stat-collected" class="text-sm sm:text-base font-black text-emerald-400">0 K</span>
+          </div>
+          <div class="bg-brand-800/40 p-2 rounded-xl border border-brand-800/60">
+            <span class="block text-[10px] text-slate-400 uppercase">Còn Phải Thu (Chưa nộp)</span>
+            <span id="stat-pending" class="text-sm sm:text-base font-black text-rose-400">0 K</span>
+          </div>
+          <div class="bg-brand-800/40 p-2 rounded-xl border border-brand-800/60">
+            <span class="block text-[10px] text-slate-400 uppercase">Quỹ Còn (Thu - Chi)</span>
+            <span id="stat-fund" class="text-sm sm:text-base font-black text-blue-400">0 K</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MAIN CONTENT: BẢNG 1 (BÊN TRÁI) & BẢNG 2 (BÊN PHẢI) -->
+    
+    <!-- BẢNG 1: DANH SÁCH TRẬN ĐẤU -->
+    <div class="lg:col-span-6 bg-brand-900 border border-brand-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between">
+      <div>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-trophy text-amber-400"></i> BẢNG 1: DANH SÁCH TRẬN ĐẤU
+          </h2>
+          <button onclick="addMatch()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-emerald-900/30">
+            <i class="fa-solid fa-circle-plus"></i> Thêm trận mới
+          </button>
+        </div>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs border-collapse min-w-[550px]">
+            <thead>
+              <tr class="bg-brand-800/80 text-slate-300 border-b border-brand-800">
+                <th class="p-2 text-center w-12">Trận</th>
+                <th class="p-2 text-center">CẶP PICK 1</th>
+                <th class="p-2 text-center">TỶ SỐ</th>
+                <th class="p-2 text-center">CẶP PICK 2</th>
+                <th class="p-2 text-center">LOẠI KÈO</th>
+                <th class="p-2 text-center">KÈO (K)</th>
+                <th class="p-2 text-center w-8"></th>
+              </tr>
+            </thead>
+            <tbody id="matches-tbody" class="divide-y divide-brand-800/50">
+              <!-- Dynamic Matches -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-brand-800 flex justify-between items-center text-xs font-semibold text-slate-300 bg-brand-950/40 p-3 rounded-xl border border-brand-800">
+        <span>Tổng số trận đã đấu:</span>
+        <span id="total-matches-count" class="text-sm font-bold text-blue-400">0 trận</span>
+      </div>
+    </div>
+
+    <!-- BẢNG 2: THỐNG KÊ THÀNH VIÊN & THÀNH TIỀN -->
+    <div class="lg:col-span-6 bg-brand-900 border border-brand-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between">
+      <div>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-chart-pie text-emerald-400"></i> BẢNG 2: THỐNG KÊ THÀNH VIÊN
+          </h2>
+          <span class="text-xs text-slate-400">Đơn vị: K (1,000 VNĐ)</span>
+        </div>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs border-collapse min-w-[650px]">
+            <thead>
+              <tr class="bg-brand-800/80 text-slate-300 border-b border-brand-800">
+                <th class="p-2">PICK THỦ</th>
+                <th class="p-2 text-center">Số trận</th>
+                <th class="p-2 text-center">Thắng/K</th>
+                <th class="p-2 text-center">Thua/K</th>
+                <th class="p-2 text-center">Kèo ngoài (Thắng|Thua)</th>
+                <th class="p-2 text-center">Thành tiền</th>
+                <th class="p-2 text-center">Tiền mang về</th>
+                <th class="p-2 text-center">Đã thu</th>
+                <th class="p-2 text-center">NOTE</th>
+              </tr>
+            </thead>
+            <tbody id="stats-tbody" class="divide-y divide-brand-800/50">
+              <!-- Dynamic Stats -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-brand-800 text-[11px] text-slate-400 space-y-1 bg-brand-950/30 p-2.5 rounded-xl border border-brand-800/50">
+        <p><i class="fa-solid fa-circle-info text-blue-400 mr-1"></i> <b>Quy tắc tính:</b></p>
+        <p>- Thua 0 điểm (vd: 11:0): Kèo x2 (Thắng +10K, Thua -30K mặc định).</p>
+        <p>- "Tiền mang về" = (Thành tiền > 0 nếu đủ số trận tối thiểu) + (Thắng kèo ngoài - Thua kèo ngoài) + Đá ví BTC.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- EDIT PLAYER MODAL -->
+  <div id="edit-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-brand-900 border border-brand-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+      <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-pen-to-square text-blue-400"></i> Đổi tên VĐV
+      </h3>
+      <input type="hidden" id="edit-player-id">
+      <div class="mb-4">
+        <label class="block text-xs text-slate-400 mb-1">Tên mới:</label>
+        <input type="text" id="edit-player-name" class="w-full px-3 py-2 text-sm rounded-lg border">
+      </div>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeEditModal()" class="px-4 py-2 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg">Hủy</button>
+        <button onclick="savePlayerName()" class="px-4 py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-lg">Lưu lại</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // State management
+    let players = [
+      { id: 'p1', name: 'Nguyễn Văn A', isGuest: false, extraWin: 0, extraLose: 0, paid: false },
+      { id: 'p2', name: 'Trần Văn B', isGuest: false, extraWin: 0, extraLose: 0, paid: false },
+      { id: 'p3', name: 'Lê Văn C', isGuest: false, extraWin: 0, extraLose: 0, paid: false },
+      { id: 'p4', name: 'Phạm Văn D', isGuest: false, extraWin: 0, extraLose: 0, paid: false },
+      { id: 'p5', name: 'Khách 1', isGuest: true, extraWin: 0, extraLose: 0, paid: false },
+      { id: 'p6', name: 'Khách 2', isGuest: true, extraWin: 0, extraLose: 0, paid: false },
+    ];
+
+    let matches = [
+      {
+        id: 'm1',
+        team1: ['p1', 'p2'],
+        team2: ['p3', 'p4'],
+        score1: 11,
+        score2: 8,
+        stakeType: 'standard', // 'standard', 'fixed_0_25', 'custom'
+        customStakeWin: 5,
+        customStakeLose: -15
+      },
+      {
+        id: 'm2',
+        team1: ['p1', 'p3'],
+        team2: ['p5', 'p6'],
+        score1: 11,
+        score2: 0,
+        stakeType: 'standard',
+        customStakeWin: 5,
+        customStakeLose: -15
+      }
+    ];
+
+    // Initialize App
+    document.addEventListener('DOMContentLoaded', () => {
+      renderAll();
+    });
+
+    function renderAll() {
+      renderPlayerList();
+      renderMatches();
+      recalculateAll();
+    }
+
+    // ------------------- PLAYER MANAGEMENT -------------------
+
+    function renderPlayerList() {
+      const search = document.getElementById('search-player-input').value.toLowerCase();
+      const container = document.getElementById('player-list-container');
+      container.innerHTML = '';
+
+      const filtered = players.filter(p => p.name.toLowerCase().includes(search));
+      document.getElementById('player-count').innerText = `${players.length} người`;
+
+      filtered.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'flex justify-between items-center bg-brand-800/40 p-2 rounded-lg border border-brand-800 text-xs';
+        div.innerHTML = `
+          <span class="font-medium ${p.isGuest ? 'text-amber-400' : 'text-white'}">
+            ${p.name} ${p.isGuest ? '<span class="text-[9px] bg-amber-950 text-amber-400 px-1 rounded border border-amber-800">Khách</span>' : ''}
+          </span>
+          <div class="flex items-center gap-1">
+            <button onclick="openEditModal('${p.id}')" class="text-slate-400 hover:text-blue-400 p-1"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="deletePlayer('${p.id}')" class="text-slate-400 hover:text-rose-400 p-1"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+
+      document.getElementById('total-players-badge').innerText = players.length;
+    }
+
+    function addPlayer() {
+      const input = document.getElementById('new-player-name');
+      const name = input.value.trim();
+      if (!name) return;
+
+      const isGuest = name.toLowerCase().startsWith('khách');
+      const newPlayer = {
+        id: 'p_' + Date.now(),
+        name: name,
+        isGuest: isGuest,
+        extraWin: 0,
+        extraLose: 0,
+        paid: false
+      };
+
+      players.push(newPlayer);
+      input.value = '';
+      renderAll();
+    }
+
+    function openEditModal(id) {
+      const p = players.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('edit-player-id').value = p.id;
+      document.getElementById('edit-player-name').value = p.name;
+      document.getElementById('edit-modal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-modal').classList.add('hidden');
+    }
+
+    function savePlayerName() {
+      const id = document.getElementById('edit-player-id').value;
+      const name = document.getElementById('edit-player-name').value.trim();
+      if (!name) return;
+
+      const p = players.find(x => x.id === id);
+      if (p) {
+        p.name = name;
+        p.isGuest = name.toLowerCase().startsWith('khách');
+      }
+
+      closeEditModal();
+      renderAll();
+    }
+
+    function deletePlayer(id) {
+      if (confirm('Bạn có chắc muốn xoá vận động viên này?')) {
+        players = players.filter(p => p.id !== id);
+        // Clear player from matches
+        matches.forEach(m => {
+          m.team1 = m.team1.map(pid => pid === id ? '' : pid);
+          m.team2 = m.team2.map(pid => pid === id ? '' : pid);
+        });
+        renderAll();
+      }
+    }
+
+    // ------------------- MATCHES MANAGEMENT -------------------
+
+    function addMatch() {
+      const newMatch = {
+        id: 'm_' + Date.now(),
+        team1: ['', ''],
+        team2: ['', ''],
+        score1: 0,
+        score2: 0,
+        stakeType: 'standard',
+        customStakeWin: 5,
+        customStakeLose: -15
+      };
+      matches.push(newMatch);
+      renderAll();
+    }
+
+    function deleteMatch(id) {
+      matches = matches.filter(m => m.id !== id);
+      renderAll();
+    }
+
+    function updateMatchData(matchId, field, value, index = null) {
+      const m = matches.find(x => x.id === matchId);
+      if (!m) return;
+
+      if (field === 'team1' || field === 'team2') {
+        m[field][index] = value;
+      } else if (field === 'score1' || field === 'score2') {
+        m[field] = parseInt(value) || 0;
+      } else if (field === 'stakeType') {
+        m.stakeType = value;
+      } else if (field === 'customStakeWin') {
+        m.customStakeWin = parseFloat(value) || 0;
+      } else if (field === 'customStakeLose') {
+        m.customStakeLose = parseFloat(value) || 0;
+      }
+
+      recalculateAll();
+    }
+
+    function getPlayerSelectOptions(selectedId) {
+      let html = `<option value="">-- Chọn VĐV --</option>`;
+      players.forEach(p => {
+        html += `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${p.name}</option>`;
+      });
+      return html;
+    }
+
+    function renderMatches() {
+      const tbody = document.getElementById('matches-tbody');
+      tbody.innerHTML = '';
+
+      matches.forEach((m, idx) => {
+        const stakes = calculateMatchStakes(m);
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-brand-800/30 transition border-b border-brand-800/40';
+
+        tr.innerHTML = `
+          <td class="p-2 text-center font-bold text-slate-400">Trận ${idx + 1}</td>
+          <td class="p-2 space-y-1">
+            <select onchange="updateMatchData('${m.id}', 'team1', this.value, 0)" class="w-full text-xs p-1 rounded border">
+              ${getPlayerSelectOptions(m.team1[0])}
+            </select>
+            <select onchange="updateMatchData('${m.id}', 'team1', this.value, 1)" class="w-full text-xs p-1 rounded border">
+              ${getPlayerSelectOptions(m.team1[1])}
+            </select>
+          </td>
+          <td class="p-2 text-center">
+            <div class="flex items-center justify-center gap-1">
+              <input type="number" min="0" value="${m.score1}" onchange="updateMatchData('${m.id}', 'score1', this.value)" class="w-10 text-center font-bold p-1 rounded border">
+              <span>:</span>
+              <input type="number" min="0" value="${m.score2}" onchange="updateMatchData('${m.id}', 'score2', this.value)" class="w-10 text-center font-bold p-1 rounded border">
+            </div>
+          </td>
+          <td class="p-2 space-y-1">
+            <select onchange="updateMatchData('${m.id}', 'team2', this.value, 0)" class="w-full text-xs p-1 rounded border">
+              ${getPlayerSelectOptions(m.team2[0])}
+            </select>
+            <select onchange="updateMatchData('${m.id}', 'team2', this.value, 1)" class="w-full text-xs p-1 rounded border">
+              ${getPlayerSelectOptions(m.team2[1])}
+            </select>
+          </td>
+          <td class="p-2 text-center">
+            <select onchange="updateMatchData('${m.id}', 'stakeType', this.value)" class="text-[11px] p-1 rounded border w-24">
+              <option value="standard" ${m.stakeType === 'standard' ? 'selected' : ''}>Mặc định</option>
+              <option value="fixed_0_25" ${m.stakeType === 'fixed_0_25' ? 'selected' : ''}>0K / -25K</option>
+              <option value="custom" ${m.stakeType === 'custom' ? 'selected' : ''}>Tự do</option>
+            </select>
+            ${m.stakeType === 'custom' ? `
+              <div class="flex gap-1 mt-1 justify-center">
+                <input type="number" placeholder="Thắng" value="${m.customStakeWin}" onchange="updateMatchData('${m.id}', 'customStakeWin', this.value)" class="w-10 text-[10px] p-0.5 border text-center">
+                <input type="number" placeholder="Thua" value="${m.customStakeLose}" onchange="updateMatchData('${m.id}', 'customStakeLose', this.value)" class="w-10 text-[10px] p-0.5 border text-center">
+              </div>
+            ` : ''}
+          </td>
+          <td class="p-2 text-center font-bold">
+            <div class="${stakes.team1 > 0 ? 'text-emerald-400' : stakes.team1 < 0 ? 'text-rose-400' : 'text-slate-400'}">
+              C1: ${stakes.team1 > 0 ? '+' : ''}${stakes.team1}K
+            </div>
+            <div class="${stakes.team2 > 0 ? 'text-emerald-400' : stakes.team2 < 0 ? 'text-rose-400' : 'text-slate-400'}">
+              C2: ${stakes.team2 > 0 ? '+' : ''}${stakes.team2}K
+            </div>
+          </td>
+          <td class="p-2 text-center">
+            <button onclick="deleteMatch('${m.id}')" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('total-matches-count').innerText = `${matches.length} trận`;
+      document.getElementById('total-matches-badge').innerText = matches.length;
+    }
+
+    // ------------------- LOGIC TÍNH TOÁN -------------------
+
+    function calculateMatchStakes(m) {
+      const defaultWin = parseFloat(document.getElementById('setting-win-rate').value) || 0;
+      const defaultLose = parseFloat(document.getElementById('setting-lose-rate').value) || 0;
+
+      let winRate = defaultWin;
+      let loseRate = defaultLose;
+
+      if (m.stakeType === 'fixed_0_25') {
+        winRate = 0;
+        loseRate = -25;
+      } else if (m.stakeType === 'custom') {
+        winRate = m.customStakeWin;
+        loseRate = m.customStakeLose;
+      }
+
+      // Check x2 rule (if score is 0)
+      let multiplier = 1;
+      if ((m.score1 === 0 && m.score2 > 0) || (m.score2 === 0 && m.score1 > 0)) {
+        multiplier = 2;
+      }
+
+      winRate *= multiplier;
+      loseRate *= multiplier;
+
+      if (m.score1 > m.score2) {
+        return { team1: winRate, team2: loseRate };
+      } else if (m.score2 > m.score1) {
+        return { team1: loseRate, team2: winRate };
+      } else {
+        return { team1: 0, team2: 0 };
+      }
+    }
+
+    function updatePlayerExtra(playerId, field, val) {
+      const p = players.find(x => x.id === playerId);
+      if (!p) return;
+      p[field] = parseFloat(val) || 0;
+      recalculateAll();
+    }
+
+    function updatePlayerPaid(playerId, checked) {
+      const p = players.find(x => x.id === playerId);
+      if (!p) return;
+      p.paid = checked;
+      recalculateAll();
+    }
+
+    function recalculateAll() {
+      const minMatches = parseInt(document.getElementById('setting-min-matches').value) || 0;
+      const btcFee = parseFloat(document.getElementById('setting-btc-fee').value) || 0;
+
+      // Stats container per player
+      const stats = {};
+      players.forEach(p => {
+        stats[p.id] = {
+          player: p,
+          matchCount: 0,
+          winAmount: 0,
+          loseAmount: 0,
+          totalBet: 0,
+          takeHome: 0
+        };
+      });
+
+      // Calculate matches
+      matches.forEach(m => {
+        const stakes = calculateMatchStakes(m);
+        
+        // Team 1
+        m.team1.forEach(pid => {
+          if (stats[pid]) {
+            stats[pid].matchCount += 1;
+            if (stakes.team1 > 0) stats[pid].winAmount += stakes.team1;
+            if (stakes.team1 < 0) stats[pid].loseAmount += stakes.team1;
+          }
+        });
+
+        // Team 2
+        m.team2.forEach(pid => {
+          if (stats[pid]) {
+            stats[pid].matchCount += 1;
+            if (stakes.team2 > 0) stats[pid].winAmount += stakes.team2;
+            if (stakes.team2 < 0) stats[pid].loseAmount += stakes.team2;
+          }
+        });
+      });
+
+      // Render BẢNG 2
+      const statsTbody = document.getElementById('stats-tbody');
+      statsTbody.innerHTML = '';
+
+      let totalCollected = 0;
+      let totalPending = 0;
+
+      players.forEach(p => {
+        const s = stats[p.id];
+        s.totalBet = s.winAmount + s.loseAmount; // Note: loseAmount is negative
+
+        // Check condition for takeHome
+        let netKeo = s.totalBet;
+        let qualifiedForWin = true;
+
+        if (s.matchCount < minMatches && netKeo > 0) {
+          qualifiedForWin = false; // Not eligible for winning money if played less than min matches
+        }
+
+        let baseTakeHome = qualifiedForWin ? netKeo : (netKeo < 0 ? netKeo : 0);
+        s.takeHome = baseTakeHome + (p.extraWin || 0) - (p.extraLose || 0) + btcFee;
+
+        // Finance tracking
+        if (p.paid) {
+          totalCollected += Math.abs(s.takeHome);
+        } else {
+          totalPending += Math.abs(s.takeHome);
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-brand-800/30 transition border-b border-brand-800/40';
+
+        tr.innerHTML = `
+          <td class="p-2 font-semibold ${p.isGuest ? 'text-amber-400' : 'text-white'}">
+            ${p.name}
+          </td>
+          <td class="p-2 text-center font-bold text-slate-300">${s.matchCount}</td>
+          <td class="p-2 text-center text-emerald-400 font-medium">+${s.winAmount}K</td>
+          <td class="p-2 text-center text-rose-400 font-medium">${s.loseAmount}K</td>
+          <td class="p-2 text-center">
+            <div class="flex gap-1 justify-center">
+              <input type="number" placeholder="+Thắng" value="${p.extraWin || ''}" onchange="updatePlayerExtra('${p.id}', 'extraWin', this.value)" class="w-12 text-center text-[10px] p-1 border rounded text-emerald-400">
+              <input type="number" placeholder="-Thua" value="${p.extraLose || ''}" onchange="updatePlayerExtra('${p.id}', 'extraLose', this.value)" class="w-12 text-center text-[10px] p-1 border rounded text-rose-400">
+            </div>
+          </td>
+          <td class="p-2 text-center font-bold ${s.totalBet >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+            ${s.totalBet > 0 ? '+' : ''}${s.totalBet}K
+          </td>
+          <td class="p-2 text-center font-black ${s.takeHome >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+            ${s.takeHome > 0 ? '+' : ''}${s.takeHome}K
+          </td>
+          <td class="p-2 text-center">
+            <input type="checkbox" ${p.paid ? 'checked' : ''} onchange="updatePlayerPaid('${p.id}', this.checked)" class="w-4 h-4 accent-blue-600 rounded cursor-pointer">
+          </td>
+          <td class="p-2 text-center font-bold">
+            ${p.paid 
+              ? '<span class="text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-2 py-0.5 rounded text-[10px]">Đã nộp</span>' 
+              : '<span class="text-rose-400 bg-rose-950/80 border border-rose-800 px-2 py-0.5 rounded text-[10px]">Chưa nộp</span>'}
+          </td>
+        `;
+
+        statsTbody.appendChild(tr);
+      });
+
+      // Update Financial overview
+      document.getElementById('stat-collected').innerText = `${totalCollected} K`;
+      document.getElementById('stat-pending').innerText = `${totalPending} K`;
+      document.getElementById('stat-fund').innerText = `${totalCollected - totalPending} K`;
+    }
+  </script>
+</body>
+</html>
